@@ -10,6 +10,7 @@ using Emmanuel.Cryptography.GnuPG;
 
 using System.Diagnostics;
 using System.IO;
+using Outlook = Microsoft.Office.Interop.Outlook;
 
 using System.Collections;
 
@@ -34,16 +35,8 @@ namespace TheSign
         {
 
             string[] fileNames = null;
-            string outputText = "";
 
-            if (testDialog.ShowDialog() == DialogResult.OK)
-            {
-                gpg.passphrase = testDialog.passPhraseText.Text;
-                if (!testDialog.storePassPhrase.Checked)
-                {
-                    testDialog.passPhraseText.Text = "";
-                }
-
+           
 
                 try
                 {
@@ -54,10 +47,16 @@ namespace TheSign
                         foreach (string fileName in fileNames)
                         {
                             // do what you are going to do with each filename
-                            Output.Text = Output.Text + "\r\nSigning " + Path.GetFileName(fileName) + " ...";
-                            gpg.ExecuteCommand(fileName, out outputText);
-                            Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed " + outputText;
-
+                            if (Path.GetExtension(fileName)==".sig")
+                            {
+                                gpg.command = Commands.Verify;
+                                CheckSig(fileName);
+                            }
+                            else
+                            {
+                                    SignFile(fileName);
+ 
+                            }
                         }
                     }
                     else if (e.Data.GetDataPresent("FileGroupDescriptor"))
@@ -77,7 +76,8 @@ namespace TheSign
                         for (int i = 76; fileGroupDescriptor[i] != 0; i++)
                         { fileName.Append(Convert.ToChar(fileGroupDescriptor[i])); }
                         theStream.Close();
-                        string path = Path.GetTempPath();  // put the zip file into the temp directory
+//                      string path = Path.GetTempPath();  // put the zip file into the temp directory
+                        string path = Path.GetDirectoryName(Application.ExecutablePath)+"\\SignedFiles\\";  // put the zip file into the temp directory
                         string theFile = path + fileName.ToString();  // create the full-path name
 
                         //
@@ -105,7 +105,10 @@ namespace TheSign
                         {
                             // for now, just delete what we created
                             Output.Text = Output.Text + "\r\nMail File: " + theFile;
-                            tempFile.Delete();
+                            SignFile(theFile);
+                            ReplyMail("TheSign: Signature of " + Path.GetFileName(theFile), "This is an automatic generated message\n\n Attached you'll find the gpg-signature of the file " + Path.GetFileName(theFile), theFile + ".sig");
+
+                            //tempFile.Delete();
                         }
                         else
                         {
@@ -121,12 +124,68 @@ namespace TheSign
 
                     // don't use MessageBox here - Outlook or Explorer is waiting !
                 }
-            }
-            else
+        }
+        private int ReplyMail(String subject, String body, String attachmentName)
+        {
+            try
             {
-                Output.Text = Output.Text + "\r\nCanceled";
-
+                // connect to Outllok
+                Outlook._Application outLookApp = new Outlook.Application();
+                // search for the active element
+                Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
+                // is one item selected?
+                if (myExplorer.Selection.Count == 1)
+                {
+                    //is it a Mail?
+                    if (myExplorer.Selection[1] is Outlook.MailItem)
+                    {
+                        // then reply it
+                        Outlook.MailItem actMail = (Outlook.MailItem)myExplorer.Selection[1];
+                        Outlook.MailItem ReplyMail = actMail.Reply();
+                        ReplyMail.Subject = subject;
+                        ReplyMail.Body = body;
+                        ReplyMail.Attachments.Add(attachmentName, Type.Missing, Type.Missing, Type.Missing);
+                        ReplyMail.Display(true);
+                    }
+                }
             }
+            catch
+            {
+                return 1;
+            }
+            return 0;
+        }
+
+        private void CheckSig(String fileName)
+        {
+            string outputText = "";
+            Output.Text = Output.Text + "\r\nChecking " + Path.GetFileName(fileName) + " ...";
+            gpg.passphrase = "";
+            gpg.ExecuteCommand(fileName, out outputText);
+            Output.Text = Output.Text +  Path.GetFileName(fileName) + " checked:\r\n" + outputText;
+        }
+
+        private void SignFile(String fileName)
+        {
+            string outputText = "";
+            if (testDialog.ShowDialog() == DialogResult.OK)
+            {
+                gpg.passphrase = testDialog.passPhraseText.Text;
+                if (!testDialog.storePassPhrase.Checked)
+                {
+                    testDialog.passPhraseText.Text = "";
+                }
+                gpg.command = Commands.detachsign;
+                gpg.armor = true;
+                Output.Text = Output.Text + "\r\nSigning " + Path.GetFileName(fileName) + " ...";
+                gpg.ExecuteCommand(fileName, out outputText);
+                Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed " + outputText;
+             }
+                 else
+                 {
+                     Output.Text = Output.Text + "\r\nCanceled";
+
+                 }
         }
 
         private void Output_DragEnter(object sender, DragEventArgs e)

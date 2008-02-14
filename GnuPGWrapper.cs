@@ -511,7 +511,7 @@ namespace Emmanuel.Cryptography.GnuPG
 			_exitcode = _processObject.ExitCode;
 			if (_exitcode == 0)
 			{
-				outputText = _outputString;
+                outputText = _outputString + _errorString;		
 			}
 			else
 			{

@@ -37,11 +37,13 @@
             this.Output.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.Output.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.Output.Location = new System.Drawing.Point(12, 12);
             this.Output.Multiline = true;
             this.Output.Name = "Output";
             this.Output.ReadOnly = true;
-            this.Output.Size = new System.Drawing.Size(268, 242);
+            this.Output.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.Output.Size = new System.Drawing.Size(622, 242);
             this.Output.TabIndex = 0;
             this.Output.Text = "Please drag the files to sign into here";
             this.Output.TextChanged += new System.EventHandler(this.Output_TextChanged);
@@ -52,7 +54,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(292, 266);
+            this.ClientSize = new System.Drawing.Size(646, 266);
             this.Controls.Add(this.Output);
             this.Name = "Main";
             this.Text = "TheSign - Techstudy by Steffen Köhler ";
