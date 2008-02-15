@@ -351,7 +351,8 @@ namespace Emmanuel.Cryptography.GnuPG
 					optionsBuilder.Append("--verify ");
 					break;
 				case Commands.detachsign:
-					optionsBuilder.Append("--detach-sign -o \""+fileName+ ".sig\" ");
+//					optionsBuilder.Append("--detach-sign -o \""+fileName+ ".sig\" ");
+                    optionsBuilder.Append("--detach-sign -o - ");
                     passphraseNeeded = true;
                     break;
 			}
@@ -434,7 +435,7 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// </summary>
 		/// <param name="inputText"></param>
 		/// <param name="outputText"></param>
-		public void ExecuteCommand(string inputText, out string outputText)
+		public void ExecuteCommand(string inputText, out string outputText, out string errorText)
 		{
 			outputText = "";
 
@@ -511,7 +512,8 @@ namespace Emmanuel.Cryptography.GnuPG
 			_exitcode = _processObject.ExitCode;
 			if (_exitcode == 0)
 			{
-                outputText = _outputString + _errorString;		
+                outputText = _outputString;
+                errorText  = _errorString;		
 			}
 			else
 			{

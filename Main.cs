@@ -159,15 +159,17 @@ namespace TheSign
         private void CheckSig(String fileName)
         {
             string outputText = "";
+            string errorText = "";
             Output.Text = Output.Text + "\r\nChecking " + Path.GetFileName(fileName) + " ...";
             gpg.passphrase = "";
-            gpg.ExecuteCommand(fileName, out outputText);
-            Output.Text = Output.Text +  Path.GetFileName(fileName) + " checked:\r\n" + outputText;
+            gpg.ExecuteCommand(fileName, out outputText, out errorText);
+            Output.Text = Output.Text + Path.GetFileName(fileName) + " checked:\r\n" + errorText;
         }
 
         private void SignFile(String fileName)
         {
             string outputText = "";
+            string errorText = "";
             if (testDialog.ShowDialog() == DialogResult.OK)
             {
                 gpg.passphrase = testDialog.passPhraseText.Text;
@@ -178,8 +180,15 @@ namespace TheSign
                 gpg.command = Commands.detachsign;
                 gpg.armor = true;
                 Output.Text = Output.Text + "\r\nSigning " + Path.GetFileName(fileName) + " ...";
-                gpg.ExecuteCommand(fileName, out outputText);
-                Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed " + outputText;
+                gpg.ExecuteCommand(fileName, out outputText, out errorText);
+                if (errorText == "")
+                {
+                    StreamWriter fs = new StreamWriter(fileName + ".sig",true);
+                    fs.Write(outputText);
+                    fs.Close();
+                    Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed " + outputText;
+                }
+
              }
                  else
                  {
