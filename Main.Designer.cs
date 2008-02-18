@@ -35,10 +35,11 @@
             this.keyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listKeysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendMyKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.copyKeysToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.onlineManualToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.printCertificateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,7 +58,6 @@
             this.Output.Size = new System.Drawing.Size(646, 240);
             this.Output.TabIndex = 0;
             this.Output.Text = "Please drag the files to sign into here";
-            this.Output.TextChanged += new System.EventHandler(this.Output_TextChanged);
             this.Output.DragDrop += new System.Windows.Forms.DragEventHandler(this.Output_DragDrop);
             this.Output.DragEnter += new System.Windows.Forms.DragEventHandler(this.Output_DragEnter);
             // 
@@ -76,6 +76,8 @@
             // theSignToolStripMenuItem
             // 
             this.theSignToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.printCertificateToolStripMenuItem,
+            this.toolStripSeparator1,
             this.quitToolStripMenuItem});
             this.theSignToolStripMenuItem.Name = "theSignToolStripMenuItem";
             this.theSignToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
@@ -86,13 +88,13 @@
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
             this.quitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.quitToolStripMenuItem.Text = "&Quit";
+            this.quitToolStripMenuItem.Click += new System.EventHandler(this.Menu_Quit);
             // 
             // keyToolStripMenuItem
             // 
             this.keyToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.listKeysToolStripMenuItem,
-            this.sendMyKeyToolStripMenuItem,
-            this.copyKeysToClipboardToolStripMenuItem});
+            this.sendMyKeyToolStripMenuItem});
             this.keyToolStripMenuItem.Name = "keyToolStripMenuItem";
             this.keyToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
             this.keyToolStripMenuItem.Text = "&Keys";
@@ -100,20 +102,16 @@
             // listKeysToolStripMenuItem
             // 
             this.listKeysToolStripMenuItem.Name = "listKeysToolStripMenuItem";
-            this.listKeysToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.listKeysToolStripMenuItem.Text = "&List Keys";
+            this.listKeysToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.listKeysToolStripMenuItem.Text = "&List Keys...";
+            this.listKeysToolStripMenuItem.Click += new System.EventHandler(this.Menu_listKeys);
             // 
             // sendMyKeyToolStripMenuItem
             // 
+            this.sendMyKeyToolStripMenuItem.Enabled = false;
             this.sendMyKeyToolStripMenuItem.Name = "sendMyKeyToolStripMenuItem";
-            this.sendMyKeyToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
+            this.sendMyKeyToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
             this.sendMyKeyToolStripMenuItem.Text = "&Send my Key...";
-            // 
-            // copyKeysToClipboardToolStripMenuItem
-            // 
-            this.copyKeysToClipboardToolStripMenuItem.Name = "copyKeysToClipboardToolStripMenuItem";
-            this.copyKeysToClipboardToolStripMenuItem.Size = new System.Drawing.Size(197, 22);
-            this.copyKeysToClipboardToolStripMenuItem.Text = "&Copy Keys to Clipboard";
             // 
             // helpToolStripMenuItem
             // 
@@ -126,15 +124,29 @@
             // 
             // onlineManualToolStripMenuItem
             // 
+            this.onlineManualToolStripMenuItem.Enabled = false;
             this.onlineManualToolStripMenuItem.Name = "onlineManualToolStripMenuItem";
             this.onlineManualToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.onlineManualToolStripMenuItem.Text = "Online &Manual...";
             // 
             // aboutToolStripMenuItem
             // 
+            this.aboutToolStripMenuItem.Enabled = false;
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.aboutToolStripMenuItem.Text = "&About..";
+            // 
+            // printCertificateToolStripMenuItem
+            // 
+            this.printCertificateToolStripMenuItem.Name = "printCertificateToolStripMenuItem";
+            this.printCertificateToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.printCertificateToolStripMenuItem.Text = "&Print Certificate...";
+            this.printCertificateToolStripMenuItem.Click += new System.EventHandler(this.Menu_printCertificate);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(169, 6);
             // 
             // Main
             // 
@@ -145,7 +157,7 @@
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
-            this.Text = "TheSign - Techstudy by Steffen Köhler ";
+            this.Text = "TheSign - (C) Steffen Köhler - only for internal testing!";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -162,10 +174,11 @@
         private System.Windows.Forms.ToolStripMenuItem keyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listKeysToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sendMyKeyToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem copyKeysToClipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem onlineManualToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem printCertificateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 

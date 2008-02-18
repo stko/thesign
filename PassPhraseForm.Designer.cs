@@ -40,6 +40,7 @@
             this.passPhraseText.Name = "passPhraseText";
             this.passPhraseText.Size = new System.Drawing.Size(229, 20);
             this.passPhraseText.TabIndex = 0;
+            this.passPhraseText.UseSystemPasswordChar = true;
             // 
             // okButton
             // 
@@ -47,7 +48,7 @@
             this.okButton.Location = new System.Drawing.Point(79, 74);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(111, 27);
-            this.okButton.TabIndex = 1;
+            this.okButton.TabIndex = 2;
             this.okButton.Text = "Ok";
             this.okButton.UseVisualStyleBackColor = true;
             // 
@@ -57,7 +58,7 @@
             this.storePassPhrase.Location = new System.Drawing.Point(30, 51);
             this.storePassPhrase.Name = "storePassPhrase";
             this.storePassPhrase.Size = new System.Drawing.Size(208, 17);
-            this.storePassPhrase.TabIndex = 2;
+            this.storePassPhrase.TabIndex = 1;
             this.storePassPhrase.Text = "Remember PassPhrase for this session";
             this.storePassPhrase.UseVisualStyleBackColor = true;
             // 

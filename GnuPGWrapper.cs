@@ -44,17 +44,34 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// <summary>
 		/// Sign and encrypt data
 		/// </summary>
-		SignAndEncrypt, 
-		/// <summary>
-		/// Decrypt data
-		/// </summary>
-		Decrypt,
+		SignAndEncrypt,
+        /// <summary>
+        /// Import keys
+        /// </summary>
+        Import,
+        /// <summary>
+        /// List Keys to stdout
+        /// </summary>
+        List,
+        /// <summary>
+        /// <summary>
+        /// Show fingerprint to stdout
+        /// </summary>
+        Fingerprint,
+        /// <summary>
+        /// List seckeyring to stdout
+        /// </summary>
+        Seckey,
+        /// <summary>
+        /// Decrypt data
+        /// </summary>
+        Decrypt,
         /// <summary>
         /// Assume that input is a signature and verify it without generating any output
         /// </summary>
         Verify,
     		/// <summary>
-		/// Assume that input is a signature and verify it without generating any output
+		/// Generate a detach sign and write it to stdout
 		/// </summary>
 		detachsign
 };
@@ -344,13 +361,25 @@ namespace Emmanuel.Cryptography.GnuPG
 					recipientNeeded = true;
 					passphraseNeeded = true;
 					break;
-				case Commands.Decrypt:
-					optionsBuilder.Append("--decrypt ");
-					break;
-				case Commands.Verify:
-					optionsBuilder.Append("--verify ");
-					break;
-				case Commands.detachsign:
+                case Commands.Decrypt:
+                    optionsBuilder.Append("--decrypt ");
+                    break;
+                case Commands.Import:
+                    optionsBuilder.Append("--import ");
+                    break;
+                case Commands.List:
+                    optionsBuilder.Append("--list-sigs --fingerprint --with-colons ");
+                    break;
+                case Commands.Seckey:
+                    optionsBuilder.Append("--list-secret-keys --with-colons ");
+                    break;
+                case Commands.Verify:
+                    optionsBuilder.Append("--verify ");
+                    break;
+                case Commands.Fingerprint:
+                    optionsBuilder.Append("--fingerprint "+_originator+" ");
+                    break;
+                case Commands.detachsign:
 //					optionsBuilder.Append("--detach-sign -o \""+fileName+ ".sig\" ");
                     optionsBuilder.Append("--detach-sign -o - ");
                     passphraseNeeded = true;
@@ -439,8 +468,12 @@ namespace Emmanuel.Cryptography.GnuPG
 		{
 			outputText = "";
 
-            string gpgOptions = BuildOptions(inputText) + " \"" + inputText + "\"";
-			string gpgExecutable = _bindirectory + "\\gpg.exe";
+            string gpgOptions = BuildOptions(inputText);
+            if (inputText != "")
+            {
+                gpgOptions +=  " \"" + inputText + "\"";
+            }
+            string gpgExecutable = _bindirectory + "\\gpg.exe";
 
 			// TODO check existence of _bindirectory and gpgExecutable
 
