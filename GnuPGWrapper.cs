@@ -54,10 +54,33 @@ namespace Emmanuel.Cryptography.GnuPG
         /// </summary>
         List,
         /// <summary>
+        /// writes TrustDb to stdout
+        /// </summary>
+        loadTrust,
+        /// <summary>
+        /// reads TrustDB from stdin
+        /// </summary>
+        writeTrust,
         /// <summary>
         /// Show fingerprint to stdout
         /// </summary>
         Fingerprint,
+        /// <summary>
+        /// List publickey to stdout
+        /// </summary>
+        ShowKey,
+        /// <summary>
+        /// add stdin to public keyring
+        /// </summary>
+        AddKey,
+        /// <summary>
+        /// sign key in  public keyring
+        /// </summary>
+        SignKey,
+        /// <summary>
+        /// delete key from public keyring
+        /// </summary>
+        DelKey,
         /// <summary>
         /// List seckeyring to stdout
         /// </summary>
@@ -370,11 +393,27 @@ namespace Emmanuel.Cryptography.GnuPG
                 case Commands.List:
                     optionsBuilder.Append("--list-sigs --fingerprint --with-colons ");
                     break;
+                case Commands.loadTrust:
+                    optionsBuilder.Append("--export-ownertrust ");
+                    break;
+                case Commands.writeTrust:
+                    optionsBuilder.Append("--import-ownertrust ");
+                    break;
                 case Commands.Seckey:
                     optionsBuilder.Append("--list-secret-keys --with-colons ");
                     break;
                 case Commands.Verify:
                     optionsBuilder.Append("--verify ");
+                    break;
+                case Commands.SignKey:
+                    optionsBuilder.Append("--sign-key ");
+                    passphraseNeeded = true;
+                    break;
+                case Commands.ShowKey:
+                    optionsBuilder.Append("--export ");
+                    break;
+                case Commands.AddKey:
+                    optionsBuilder.Append("--import ");
                     break;
                 case Commands.Fingerprint:
                     optionsBuilder.Append("--fingerprint "+_originator+" ");
@@ -464,7 +503,7 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// </summary>
 		/// <param name="inputText"></param>
 		/// <param name="outputText"></param>
-		public void ExecuteCommand(string inputText, out string outputText, out string errorText)
+		public void ExecuteCommand(string stdin, string inputText, out string outputText, out string errorText)
 		{
 			outputText = "";
 
@@ -497,8 +536,11 @@ namespace Emmanuel.Cryptography.GnuPG
 			}
 
 			// Send input text
-			// _processObject.StandardInput.Write(inputText);
-			// _processObject.StandardInput.Flush();
+            if (stdin != "")
+            {
+                _processObject.StandardInput.Write(stdin);
+                _processObject.StandardInput.Flush();
+            }
 			_processObject.StandardInput.Close();
 
 			_outputString = "";

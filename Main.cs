@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-//using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Emmanuel.Cryptography.GnuPG;
-
 using System.Diagnostics;
 using System.IO;
 using Outlook = Microsoft.Office.Interop.Outlook;
-
 using System.Collections;
 
 
@@ -19,101 +16,38 @@ namespace TheSign
 {
     public partial class Main : Form
     {
-        class KeyRingData
-        {
-            public class KeyRingUser
-            {
-                public string UserId;
-                public DateTime Expires;
-                public DateTime Generated;
-                public string Fingerprint;
-                public string User;
-                public bool valid;
-            }
-            public ArrayList Items= new ArrayList();
-            public KeyRingData(bool seckeyring,GnuPGWrapper gpg)
-            {
-                string outputText = "";
-                string errorText = "";
-                if (seckeyring)
-                {
-                    gpg.command = Commands.Seckey;
-                    gpg.armor = true;
-                    gpg.passphrase = "";
-                    gpg.ExecuteCommand("", out outputText, out errorText);
-                }
-                else
-                {
-                    gpg.command = Commands.List;
-                    gpg.armor = true;
-                    gpg.passphrase = "";
-                    gpg.ExecuteCommand("", out outputText, out errorText);
-                }
-                KeyRingUser thisKeyringUser =null;
-                foreach (string line in (outputText.Split('\n')))
-                {
-                    string [] thisline = line.Split(':');
-                    try
-                    {
-                        if (thisline[0] == "sec" || thisline[0] == "pub")
-                        {
-                            if(thisKeyringUser != null)
-                            {
-                                Items.Add(thisKeyringUser);
-                            }
-                                
-                            thisKeyringUser = new KeyRingUser(); 
-                            thisKeyringUser.UserId = thisline[4];
-                            thisKeyringUser.User = thisline[9];
-                            thisKeyringUser.Generated = DateTime.Parse(thisline[5]);
-                            thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
-                            thisKeyringUser.valid = (thisKeyringUser.Expires.Ticks == 0 || thisKeyringUser.Expires.Ticks > DateTime.Now.Ticks);
-                        }
-                        if (thisline[0] == "fpr" ) 
-                        {
-                            thisKeyringUser.Fingerprint=thisline[9];
-                        }
-                    }
-                    catch
-                    { }
-                }
-                if (thisKeyringUser != null)
-                {
-                    Items.Add(thisKeyringUser);
-                }
-
-
-            }
-        }
         
-      GnuPGWrapper gpg = new GnuPGWrapper();
-      PassphraseForm testDialog = new PassphraseForm();
+          GnuPGWrapper gpg = new GnuPGWrapper();
+          PassphraseForm testDialog = new PassphraseForm();
+          KeyForm keywindow;
       public Main()
-        {
-            InitializeComponent();
-            gpg.homedirectory = "./GnuPG";
-            gpg.passphrase = "signtest";
-            KeyRingData privateKey = new KeyRingData(true, gpg);
-            KeyRingData publicKey = new KeyRingData(false, gpg);
-            int i=0;
+      {
+          InitializeComponent();
+          saveFileDialog.InitialDirectory = Path.GetDirectoryName( Application.ExecutablePath);
+          gpg.homedirectory = Path.GetDirectoryName( Application.ExecutablePath)+"\\GnuPG";
+          gpg.passphrase = "signtest";
+          keywindow = new KeyForm(gpg, testDialog);
+          KeyForm.KeyRingData privateKey = new KeyForm.KeyRingData(true, gpg);
+
+          int i=0;
           bool endflag=false;
-          KeyRingData.KeyRingUser thisitem =null;
-            while (i < privateKey.Items.Count && !endflag)
-            {
-                thisitem = (KeyRingData.KeyRingUser)privateKey.Items[i];
-                if (thisitem.valid)
-                {
-                    endflag = true;
-                }
-                else
-                {
+          KeyForm.KeyRingData.KeyRingUser thisitem = null;
+          while (i < privateKey.Items.Count && !endflag)
+          {
+              thisitem = (KeyForm.KeyRingData.KeyRingUser)privateKey.Items[i];
+              if (thisitem.valid)
+              {
+                  endflag = true;
+              }
+              else
+              {
                     i++;
                 }
             }
             if (endflag)
             {
                 gpg.originator = thisitem.UserId;
-                Text = thisitem.User + " | " + Text;
+                Text = thisitem.User + " | " + Text + " | " + build.version + "  " + build.buildver;
             }
             else
             {
@@ -214,11 +148,20 @@ namespace TheSign
             {
                 if (isMail)
                 {
-                    //öö
+                    saveFileDialog.Title = "Select original file to add the sign to:";
+                    saveFileDialog.FileName = Path.GetFullPath(saveFileDialog.InitialDirectory) + "\\" + Path.GetFileName((Path.GetFileNameWithoutExtension(fileName)));
+                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        fileName = MoveIntoFile(saveFileDialog.FileName, ".sig", fileName, true, true, true);
+                        Output.Text += "\r\nSignature saved";
+                        cleanupSigfile(fileName);
+                        CheckSig(fileName);
+                    }
                 }
                 else
                 {
                     CheckSig(fileName);
+
                 }
             }
             else if (Path.GetExtension(fileName) == ".pubkey")
@@ -245,6 +188,7 @@ namespace TheSign
 
         private string MoveIntoFile(string fileName, string ext, string input, bool isFile, bool Append, bool overwrite)
         {
+            fileName += ext;
             if (isFile)
             {
                 if (File.Exists(fileName) && !overwrite)
@@ -260,11 +204,11 @@ namespace TheSign
                 Stream fs;
                 if (Append)
                 {
-                    fs = File.OpenWrite(input);
+                    fs = File.Open(fileName, FileMode.Append, FileAccess.Write);
                 }
                 else
                 {
-                    fs = File.Open(input, FileMode.Append, FileAccess.ReadWrite);
+                    fs = File.OpenWrite(fileName);
                 }
 
                 while ((bytesread = inputStream.Read(buffer, 0, 1024)) > 0)
@@ -276,7 +220,7 @@ namespace TheSign
             }
             else
             {
-                StreamWriter fs = new StreamWriter(fileName + ext, Append);
+                StreamWriter fs = new StreamWriter(fileName , Append);
                 fs.Write(input);
                 fs.Close();
             }
@@ -322,7 +266,7 @@ namespace TheSign
             gpg.armor = true;
             Output.Text = Output.Text + "\r\nImport " + Path.GetFileName(fileName) + " ...";
             gpg.passphrase = "";
-            gpg.ExecuteCommand(fileName, out outputText, out errorText);
+            gpg.ExecuteCommand("", fileName, out outputText, out errorText);
             Output.Text = Output.Text + Path.GetFileName(fileName) + " Imported:\r\n" + errorText;
         }
 
@@ -334,7 +278,7 @@ namespace TheSign
             gpg.armor = true;
             Output.Text = Output.Text + "\r\nChecking " + Path.GetFileName(fileName) + " ...";
             gpg.passphrase = "";
-            gpg.ExecuteCommand(fileName, out outputText, out errorText);
+            gpg.ExecuteCommand("", fileName, out outputText, out errorText);
             Output.Text = Output.Text + Path.GetFileName(fileName) + " checked:\r\n" + errorText;
         }
 
@@ -352,7 +296,7 @@ namespace TheSign
                 gpg.command = Commands.detachsign;
                 gpg.armor = true;
                 Output.Text = Output.Text + "\r\nSigning " + Path.GetFileName(fileName) + " ...";
-                gpg.ExecuteCommand(fileName, out outputText, out errorText);
+                gpg.ExecuteCommand("", fileName, out outputText, out errorText);
                 if (errorText == "")
                 {
                     MoveIntoFile(fileName, ".sig", outputText, false, true,false);
@@ -388,15 +332,7 @@ namespace TheSign
 
         private void Menu_listKeys(object sender, EventArgs e)
         {
-            string outputText = "";
-            string errorText = "";
-            gpg.command = Commands.List;
-            gpg.armor = true;
-            Output.Text = Output.Text + "\r\nList Keys:";
-            gpg.passphrase = "";
-            gpg.ExecuteCommand("", out outputText, out errorText);
-            Output.Text = Output.Text  + outputText;
-
+            keywindow.ShowDialog();
         }
 
         private void Menu_printCertificate(object sender, EventArgs e)
@@ -405,18 +341,93 @@ namespace TheSign
             string errorText = "";
             gpg.command = Commands.Fingerprint;
             gpg.armor = true;
-            Output.Text = Output.Text + "\r\nGenerate Certificate sheet:";
+            Output.Text = Output.Text + "\r\nGenerate Certificate sheet:\r\n";
             gpg.passphrase = "";
-            gpg.ExecuteCommand("", out outputText, out errorText);
+            gpg.ExecuteCommand("", "", out outputText, out errorText);
             if (outputText == "")
             {
+                Output.Text = Output.Text + "Errortext:"+errorText+"Done\r\n";
             }
             else
             {
-                Output.Text = Output.Text + "Done\r\n";
+                string tempfile = Path.GetTempPath()+"\\cert.html";
+                StreamWriter fs = new StreamWriter(tempfile);
+                fs.WriteLine("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>TheSign Signature Certification</title></head><body><center>"
+                    +"<h2>GPG Signature Certification</h2>"
+                    +"<p>Hereby I declare that my dignal signature shown below"
+                    +"can be used equally to my normal handwritten signature until redingsbums<p>"
+                    +"<p>Hiermit erkläre ich, das meine unten aufgeführte digitale Signatur"
+                    +"gleichbedeutend meiner normalen handschriftlichen Unterschrift betrachtet werden kann<p>"
+                    +"<tt>"
+                    +outputText.Replace("\n","<br>")
+                    +"</tt><p><p>Date:_______________________________________________"
+                    + "<p><p>Name_______________________________________________"
+                    + "<p><p>Signature_______________________________________________"
+                    + "</body></html>");
+                fs.Close();
+                System.Diagnostics.Process.Start(tempfile);
+                Output.Text = Output.Text  + "\r\nDone\r\n";
             }
 
         }
 
+        private void launchURL(string targetURL)
+        {
+            System.Diagnostics.Process.Start(targetURL);
+        }
+
+        private void onlineManualToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            launchURL("http://www.koehlers.de/wiki/doku.php?id=thesign:index");
+        }
+
+        private void cleanupSigfile(string filename)
+        {
+            Hashtable keys =new Hashtable();
+            bool insidesign = false;
+            string thisline;
+            string totalsign="";
+            StreamReader fs = new StreamReader(filename);
+            while (!fs.EndOfStream)
+            {
+                thisline= fs.ReadLine();
+                if (thisline == "-----BEGIN PGP SIGNATURE-----")
+                {
+                    totalsign = thisline;
+                    insidesign = true;
+                }
+                else if (thisline == "-----END PGP SIGNATURE-----")
+                {
+                    if (insidesign)
+                    {
+                        insidesign = false;
+                        totalsign += "\r\n" + thisline;
+                        keys[totalsign] = 1;
+                    }
+
+                }
+                else
+                {
+                    if (insidesign)
+                    {
+                        totalsign += "\r\n" + thisline;
+                    }
+                }
+            }
+            fs.Close();
+            StreamWriter fsout = new StreamWriter(filename);
+            
+            foreach (string line in keys.Keys)
+            {
+                fsout.WriteLine(line);
+            }
+            fsout.Close();
+
+        }
+
+        private void bugtrackerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            launchURL("http://www.koehlers.de/flyspray/index.php?project=3&switch=1&do=index");
+        }
     }
 }
