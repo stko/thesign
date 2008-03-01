@@ -233,6 +233,7 @@ namespace TheSign
             {
                 // connect to Outllok
                 Outlook._Application outLookApp = new Outlook.Application();
+            //http://tangiblesoftwaresolutions.com/Articles/CSharp%20Equivalent%20to%20VB%20CreateObject.htm
                 // search for the active element
                 Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
                 // is one item selected?

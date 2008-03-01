@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("WindowsFormsApplication1")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("TheSign GPG Signatures")]
+[assembly: AssemblyDescription("GPG Fontend expecially for signing")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("WindowsFormsApplication1")]
-[assembly: AssemblyCopyright("Copyright ©  2007")]
+[assembly: AssemblyProduct("The Sign")]
+[assembly: AssemblyCopyright("Copyright ©  2007 Steffen Köhler (GPL)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.Output = new System.Windows.Forms.TextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.theSignToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -114,7 +115,7 @@
             // listKeysToolStripMenuItem
             // 
             this.listKeysToolStripMenuItem.Name = "listKeysToolStripMenuItem";
-            this.listKeysToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.listKeysToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.listKeysToolStripMenuItem.Text = "&List Keys...";
             this.listKeysToolStripMenuItem.Click += new System.EventHandler(this.Menu_listKeys);
             // 
@@ -161,6 +162,7 @@
             this.ClientSize = new System.Drawing.Size(646, 266);
             this.Controls.Add(this.Output);
             this.Controls.Add(this.menuStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
             this.Text = "TheSign - (C) Steffen Köhler ";
