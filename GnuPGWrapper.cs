@@ -585,10 +585,10 @@ namespace Emmanuel.Cryptography.GnuPG
 
 			// Check results and prepare output
 			_exitcode = _processObject.ExitCode;
-			if (_exitcode == 0)
+            errorText = _errorString;
+            if (_exitcode == 0)
 			{
                 outputText = _outputString;
-                errorText  = _errorString;		
 			}
 			else
 			{

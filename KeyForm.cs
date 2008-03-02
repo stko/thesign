@@ -15,6 +15,8 @@ namespace TheSign
     {
         private GnuPGWrapper gpg;
         private PassphraseForm testDialog;
+        ActionComboBoxClass Actionbox;
+
         public class KeyRingData
         {
             public class KeyRingUser
@@ -96,7 +98,12 @@ namespace TheSign
             this.gpg = gpg;
             this.testDialog = passform;
             LoadDB();
-            SaveDB();
+            KeyForm.KeyRingData privateKey = new KeyForm.KeyRingData(true, gpg);
+            Actionbox = new ActionComboBoxClass(ActionComboBox, ActionButton);
+            Actionbox.addAction("Sendkey", "Send actual selected Public Key via Email...", Sendkey);
+            Actionbox.addAction("ReadKeyFromMail", "Read Public Key out of actual Email...", ReadKeyFromMail);
+            Actionbox.addAction("SignKey", "Sign actual selected Public Key...", SignKey);
+            Actionbox.enableAction("ReadKeyFromMail");
         }
         private bool LoadDB()
         {
@@ -124,6 +131,7 @@ namespace TheSign
             }
             return keys.Count > 0;
         }
+
         private bool SaveDB()
         {
             if (keys.Count > 0)
@@ -143,6 +151,7 @@ namespace TheSign
             }
             return true;
         }
+
         private void buildTree()
         {
             KeyRingData publicKey = new KeyForm.KeyRingData(false, gpg);
@@ -151,23 +160,26 @@ namespace TheSign
             {
                 TreeNode thisnode = keyview.Nodes.Add(user.User + " (" + user.UserId + ")");
                 thisnode.Tag = user.UserId;
+                thisnode.ToolTipText = "fingerprint:" + user.Fingerprint;
                 foreach (string sig in user.signs.Keys)
                 {
                     TreeNode signode = thisnode.Nodes.Add(user.signs[sig] + " (" + sig + ")");
                     signode.Tag = sig;
                 }
             }
+            Actionbox.disableAction("Sendkey");
+            Actionbox.disableAction("SignKey");
         }
+
         private void KeyForm_Shown(object sender, EventArgs e)
         {
             buildTree();
         }
 
-        private void sendbutton_Click(object sender, EventArgs e)
+        private void Sendkey()
         {
             if (keyview.SelectedNode != null)
             {
-                MessageBox.Show(keyview.SelectedNode.Tag.ToString());
                 string outputText = "";
                 string errorText = "";
                 gpg.command = Commands.ShowKey;
@@ -176,7 +188,6 @@ namespace TheSign
                 gpg.ExecuteCommand("", keyview.SelectedNode.Tag.ToString(), out outputText, out errorText);
                 if (outputText != "")
                 {
-                    MessageBox.Show(outputText);
                     try
                     {
                         // connect to Outllok
@@ -197,11 +208,11 @@ namespace TheSign
             }
         }
 
-        private void readbutton_Click(object sender, EventArgs e)
+        private void ReadKeyFromMail()
         {
             try
             {
-                // connect to Outllok
+                // connect to Outlook
                 Outlook._Application outLookApp = new Outlook.Application();
                 // search for the active element
                 Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
@@ -225,10 +236,28 @@ namespace TheSign
                             gpg.ExecuteCommand(key, "", out outputText, out errorText);
                             if (outputText != "")
                             {
-                                MessageBox.Show("GPG replies:\n"+outputText);
+                                MessageBox.Show("GPG replies:\n" + outputText);
+                                buildTree();
                             }
                         }
+                        else
+                        {
+                            MessageBox.Show("Sorry, no text found in Mail", "TheSign Error");
+
+                        }
+
                     }
+                    else
+                    {
+                        MessageBox.Show("Sorry, the Item in Outlook seems no mail..", "TheSign Error");
+
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Sorry, there's more as one item selected in Outlook", "TheSign Error");
+
                 }
             }
             catch
@@ -238,10 +267,14 @@ namespace TheSign
 
         }
 
-        private void Signbutton_Click(object sender, EventArgs e)
+        private void SignKey()
         {
             if (keyview.SelectedNode != null)
             {
+                if (MessageBox.Show("You must not sign a key without being 100% sure\nthat the key belongs to the right person!\n\nDid you checked the Fingerprint against the\nhand signed Certificate & verified the\ncertificate with the assumed owner\ne.g. via phone?\n", "Security Warning!", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+                {
+                    return;
+                }
                 if (testDialog.ShowDialog() == DialogResult.OK)
                 {
                     gpg.passphrase = testDialog.passPhraseText.Text;
@@ -257,11 +290,41 @@ namespace TheSign
                     if (errorText != "")
                     {
                         MessageBox.Show("GPG replies:\n" + errorText);
+                        buildTree();
 
                     }
                 }
             }
 
+        }
+
+        private void ActionButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ActionComboBoxClass.ActionItem thisaction = (ActionComboBoxClass.ActionItem)ActionComboBox.SelectedItem;
+                thisaction.onselectevent();
+            }
+            catch
+            {
+            }
+
+        }
+
+        private void keyview_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (keyview.SelectedNode == null || keyview.SelectedNode.Parent != null)
+            {
+                Actionbox.disableAction("Sendkey");
+                Actionbox.disableAction("SignKey");
+
+            }
+            else
+            {
+                Actionbox.enableAction("Sendkey");
+                Actionbox.enableAction("SignKey");
+
+            }
         }
 
 

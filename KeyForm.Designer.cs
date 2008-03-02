@@ -28,158 +28,90 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.ActionButton = new System.Windows.Forms.Button();
+            this.ActionComboBox = new System.Windows.Forms.ComboBox();
             this.keyview = new System.Windows.Forms.TreeView();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.sendbutton = new System.Windows.Forms.Button();
-            this.readbutton = new System.Windows.Forms.Button();
-            this.deletebutton = new System.Windows.Forms.Button();
-            this.trustbutton = new System.Windows.Forms.Button();
-            this.Signbutton = new System.Windows.Forms.Button();
-            this.groupBox3.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // groupBox3
+            // panel1
             // 
-            this.groupBox3.Controls.Add(this.keyview);
-            this.groupBox3.Location = new System.Drawing.Point(12, 12);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(573, 284);
-            this.groupBox3.TabIndex = 1;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Available Keys:";
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Controls.Add(this.label1);
+            this.panel1.Controls.Add(this.ActionButton);
+            this.panel1.Controls.Add(this.ActionComboBox);
+            this.panel1.Location = new System.Drawing.Point(2, 307);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(592, 29);
+            this.panel1.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(4, 10);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(40, 13);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "Action:";
+            // 
+            // ActionButton
+            // 
+            this.ActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.ActionButton.Location = new System.Drawing.Point(515, 3);
+            this.ActionButton.Name = "ActionButton";
+            this.ActionButton.Size = new System.Drawing.Size(65, 23);
+            this.ActionButton.TabIndex = 3;
+            this.ActionButton.Text = "Go...";
+            this.ActionButton.UseVisualStyleBackColor = true;
+            this.ActionButton.Click += new System.EventHandler(this.ActionButton_Click);
+            // 
+            // ActionComboBox
+            // 
+            this.ActionComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.ActionComboBox.FormattingEnabled = true;
+            this.ActionComboBox.Location = new System.Drawing.Point(50, 5);
+            this.ActionComboBox.Name = "ActionComboBox";
+            this.ActionComboBox.Size = new System.Drawing.Size(459, 21);
+            this.ActionComboBox.TabIndex = 2;
             // 
             // keyview
             // 
-            this.keyview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.keyview.Location = new System.Drawing.Point(3, 16);
+            this.keyview.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.keyview.Location = new System.Drawing.Point(2, 1);
             this.keyview.Name = "keyview";
-            this.keyview.Size = new System.Drawing.Size(567, 265);
-            this.keyview.TabIndex = 0;
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.Controls.Add(this.readbutton, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.deletebutton, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.trustbutton, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.Signbutton, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this.sendbutton, 1, 0);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 300);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(1);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(570, 76);
-            this.tableLayoutPanel1.TabIndex = 2;
-            // 
-            // sendbutton
-            // 
-            this.sendbutton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.SetColumnSpan(this.sendbutton, 3);
-            this.sendbutton.Location = new System.Drawing.Point(1, 1);
-            this.sendbutton.Margin = new System.Windows.Forms.Padding(1);
-            this.sendbutton.Name = "sendbutton";
-            this.sendbutton.Size = new System.Drawing.Size(568, 23);
-            this.sendbutton.TabIndex = 0;
-            this.sendbutton.Text = "Send Key via Email...";
-            this.sendbutton.UseVisualStyleBackColor = true;
-            this.sendbutton.Click += new System.EventHandler(this.sendbutton_Click);
-            // 
-            // readbutton
-            // 
-            this.readbutton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.SetColumnSpan(this.readbutton, 3);
-            this.readbutton.Location = new System.Drawing.Point(1, 26);
-            this.readbutton.Margin = new System.Windows.Forms.Padding(1);
-            this.readbutton.Name = "readbutton";
-            this.readbutton.Size = new System.Drawing.Size(568, 23);
-            this.readbutton.TabIndex = 1;
-            this.readbutton.Text = "Read Key from actual selected Email";
-            this.readbutton.UseVisualStyleBackColor = true;
-            this.readbutton.Click += new System.EventHandler(this.readbutton_Click);
-            // 
-            // deletebutton
-            // 
-            this.deletebutton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.deletebutton.Enabled = false;
-            this.deletebutton.Location = new System.Drawing.Point(1, 51);
-            this.deletebutton.Margin = new System.Windows.Forms.Padding(1);
-            this.deletebutton.Name = "deletebutton";
-            this.deletebutton.Size = new System.Drawing.Size(187, 24);
-            this.deletebutton.TabIndex = 2;
-            this.deletebutton.Text = "Delete Key...";
-            this.deletebutton.UseVisualStyleBackColor = true;
-            // 
-            // trustbutton
-            // 
-            this.trustbutton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.trustbutton.Enabled = false;
-            this.trustbutton.Location = new System.Drawing.Point(190, 51);
-            this.trustbutton.Margin = new System.Windows.Forms.Padding(1);
-            this.trustbutton.Name = "trustbutton";
-            this.trustbutton.Size = new System.Drawing.Size(187, 24);
-            this.trustbutton.TabIndex = 3;
-            this.trustbutton.Text = "Change Level of Trust...";
-            this.trustbutton.UseVisualStyleBackColor = true;
-            // 
-            // Signbutton
-            // 
-            this.Signbutton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.Signbutton.Location = new System.Drawing.Point(379, 51);
-            this.Signbutton.Margin = new System.Windows.Forms.Padding(1);
-            this.Signbutton.Name = "Signbutton";
-            this.Signbutton.Size = new System.Drawing.Size(190, 24);
-            this.Signbutton.TabIndex = 4;
-            this.Signbutton.Text = "Sign Key...";
-            this.Signbutton.UseVisualStyleBackColor = true;
-            this.Signbutton.Click += new System.EventHandler(this.Signbutton_Click);
+            this.keyview.ShowNodeToolTips = true;
+            this.keyview.Size = new System.Drawing.Size(592, 305);
+            this.keyview.TabIndex = 5;
+            this.keyview.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.keyview_AfterSelect);
             // 
             // KeyForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(597, 386);
-            this.Controls.Add(this.tableLayoutPanel1);
-            this.Controls.Add(this.groupBox3);
+            this.ClientSize = new System.Drawing.Size(597, 338);
+            this.Controls.Add(this.keyview);
+            this.Controls.Add(this.panel1);
             this.Name = "KeyForm";
-            this.Text = "TheSign- Key List Window";
+            this.Text = "TheSign -  Available Public Keys";
             this.Shown += new System.EventHandler(this.KeyForm_Shown);
-            this.groupBox3.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button ActionButton;
+        private System.Windows.Forms.ComboBox ActionComboBox;
         private System.Windows.Forms.TreeView keyview;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Button sendbutton;
-        private System.Windows.Forms.Button readbutton;
-        private System.Windows.Forms.Button deletebutton;
-        private System.Windows.Forms.Button trustbutton;
-        private System.Windows.Forms.Button Signbutton;
     }
 }
