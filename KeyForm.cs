@@ -14,8 +14,8 @@ namespace TheSign
     public partial class KeyForm : Form
     {
         private GnuPGWrapper gpg;
+
         private PassphraseForm testDialog;
-        ActionComboBoxClass Actionbox;
 
         public class KeyRingData
         {
@@ -65,8 +65,15 @@ namespace TheSign
                             thisKeyringUser.UserId = thisline[4];
                             thisKeyringUser.User = thisline[9];
                             thisKeyringUser.Generated = DateTime.Parse(thisline[5]);
-                            thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
-                            thisKeyringUser.valid = (thisKeyringUser.Expires.Ticks == 0 || thisKeyringUser.Expires.Ticks > DateTime.Now.Ticks);
+                            if (thisline[6] != "")
+                            {
+                                thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
+                                thisKeyringUser.valid = (thisKeyringUser.Expires.Ticks == 0 || thisKeyringUser.Expires.Ticks > DateTime.Now.Ticks);
+                            }
+                            else
+                            {
+                                thisKeyringUser.valid = true;
+                            }
                         }
                         if (thisline[0] == "fpr")
                         {
@@ -91,20 +98,18 @@ namespace TheSign
 
             }
         }
+
         private Hashtable keys = new Hashtable();
-        public KeyForm(GnuPGWrapper gpg,PassphraseForm passform)
+
+        public KeyForm(GnuPGWrapper gpg, PassphraseForm passform)
         {
             InitializeComponent();
             this.gpg = gpg;
             this.testDialog = passform;
             LoadDB();
             KeyForm.KeyRingData privateKey = new KeyForm.KeyRingData(true, gpg);
-            Actionbox = new ActionComboBoxClass(ActionComboBox, ActionButton);
-            Actionbox.addAction("Sendkey", "Send actual selected Public Key via Email...", Sendkey);
-            Actionbox.addAction("ReadKeyFromMail", "Read Public Key out of actual Email...", ReadKeyFromMail);
-            Actionbox.addAction("SignKey", "Sign actual selected Public Key...", SignKey);
-            Actionbox.enableAction("ReadKeyFromMail");
         }
+
         private bool LoadDB()
         {
             string outputText = "";
@@ -152,23 +157,40 @@ namespace TheSign
             return true;
         }
 
+        private int getTrustLevel(string fingerprint)
+        {
+            int trustlevel = 0;
+            try
+            {
+                trustlevel = (int)keys[fingerprint] - 2;
+            }
+            catch
+            {
+            }
+            return trustlevel;
+        }
+
         private void buildTree()
         {
+            LoadDB();
             KeyRingData publicKey = new KeyForm.KeyRingData(false, gpg);
             keyview.Nodes.Clear();
             foreach (KeyRingData.KeyRingUser user in publicKey.Items)
             {
-                TreeNode thisnode = keyview.Nodes.Add(user.User + " (" + user.UserId + ")");
-                thisnode.Tag = user.UserId;
+                TreeNode thisnode = keyview.Nodes.Add(user.User);
+                thisnode.Tag = user;
+                thisnode.ImageIndex = getTrustLevel(user.Fingerprint);
+                thisnode.SelectedImageIndex = thisnode.ImageIndex;
                 thisnode.ToolTipText = "fingerprint:" + user.Fingerprint;
                 foreach (string sig in user.signs.Keys)
                 {
-                    TreeNode signode = thisnode.Nodes.Add(user.signs[sig] + " (" + sig + ")");
+                    //                    TreeNode signode = thisnode.Nodes.Add(user.signs[sig].ToString, sig);
+                    TreeNode signode = thisnode.Nodes.Add(user.signs[sig].ToString());
+                    signode.ImageIndex = 5;
+                    signode.SelectedImageIndex = 5;
                     signode.Tag = sig;
                 }
             }
-            Actionbox.disableAction("Sendkey");
-            Actionbox.disableAction("SignKey");
         }
 
         private void KeyForm_Shown(object sender, EventArgs e)
@@ -185,7 +207,8 @@ namespace TheSign
                 gpg.command = Commands.ShowKey;
                 gpg.armor = true;
                 gpg.passphrase = "";
-                gpg.ExecuteCommand("", keyview.SelectedNode.Tag.ToString(), out outputText, out errorText);
+                TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                 if (outputText != "")
                 {
                     try
@@ -194,7 +217,7 @@ namespace TheSign
                         Outlook._Application outLookApp = new Outlook.Application();
 
                         Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
-                        actMail.Subject = "Public Key of " + keyview.SelectedNode.Text;
+                        actMail.Subject = "TheSign: Public Key of " + keyview.SelectedNode.Text;
                         actMail.Body = outputText;
                         actMail.Display(true);
                     }
@@ -236,9 +259,15 @@ namespace TheSign
                             gpg.ExecuteCommand(key, "", out outputText, out errorText);
                             if (outputText != "")
                             {
-                                MessageBox.Show("GPG replies:\n" + outputText);
+                                MessageBox.Show("GPG replies oText:\n" + outputText);
                                 buildTree();
                             }
+                            else
+                            {
+                                MessageBox.Show("GPG replies eText:\n" + outputText);
+                                buildTree();
+                            }
+
                         }
                         else
                         {
@@ -262,7 +291,7 @@ namespace TheSign
             }
             catch
             {
-                MessageBox.Show("Error: No connection to Outlook found..","TheSign Error");
+                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
             }
 
         }
@@ -285,28 +314,39 @@ namespace TheSign
                     string errorText = "";
                     gpg.command = Commands.SignKey;
                     gpg.armor = true;
-                    gpg.verbose = VerboseLevel.VeryVerbose;
-                    gpg.ExecuteCommand("", keyview.SelectedNode.Tag.ToString(), out outputText, out errorText);
+                    TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                    gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                     if (errorText != "")
                     {
                         MessageBox.Show("GPG replies:\n" + errorText);
-                        buildTree();
 
                     }
+                    buildTree();
                 }
             }
 
         }
 
-        private void ActionButton_Click(object sender, EventArgs e)
+        private void DeleteKey()
         {
-            try
+            if (keyview.SelectedNode != null)
             {
-                ActionComboBoxClass.ActionItem thisaction = (ActionComboBoxClass.ActionItem)ActionComboBox.SelectedItem;
-                thisaction.onselectevent();
-            }
-            catch
-            {
+                TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                if (MessageBox.Show("Do you really want to delete\n\n" + myuser.User + "\n\nfrom your Keylist?\nThis Deletion can't be reversed!", "Security Warning!", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+                {
+                    return;
+                }
+                string outputText = "";
+                string errorText = "";
+                gpg.command = Commands.DelKey;
+                gpg.armor = true;
+                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                if (errorText != "")
+                {
+                    MessageBox.Show("GPG replies:\n" + errorText);
+
+                }
+                buildTree();
             }
 
         }
@@ -315,16 +355,45 @@ namespace TheSign
         {
             if (keyview.SelectedNode == null || keyview.SelectedNode.Parent != null)
             {
-                Actionbox.disableAction("Sendkey");
-                Actionbox.disableAction("SignKey");
-
+                KeyStrip.Enabled = false;
             }
             else
             {
-                Actionbox.enableAction("Sendkey");
-                Actionbox.enableAction("SignKey");
-
+                KeyStrip.Enabled = true;
             }
+        }
+
+        private void toolStripButtonTrust_dont_know_Click(object sender, EventArgs e)
+        {
+            if (sender is ToolStripItem)
+            {
+                ToolStripItem mybutton = (ToolStripItem)sender;
+                int newtrustlevel = Convert.ToInt32(mybutton.Tag);
+                TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                keys[myuser.Fingerprint] = newtrustlevel + 1;
+                SaveDB();
+                buildTree();
+            }
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            Sendkey();
+        }
+
+        private void toolStripSign_Click(object sender, EventArgs e)
+        {
+            SignKey();
+        }
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            DeleteKey();
+        }
+
+        private void toolStripButtonReadMail_Click(object sender, EventArgs e)
+        {
+            ReadKeyFromMail();
         }
 
 

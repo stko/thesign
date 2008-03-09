@@ -62,6 +62,10 @@ namespace Emmanuel.Cryptography.GnuPG
         /// </summary>
         writeTrust,
         /// <summary>
+        /// adds a clearsign to stdin
+        /// </summary>
+        clearSign,
+        /// <summary>
         /// Show fingerprint to stdout
         /// </summary>
         Fingerprint,
@@ -370,8 +374,12 @@ namespace Emmanuel.Cryptography.GnuPG
 			// Command
 			switch (_command)
 			{
+                case Commands.clearSign:
+					optionsBuilder.Append("--clearsign -o - ");
+					passphraseNeeded = true;
+					break;
 				case Commands.Sign:
-					optionsBuilder.Append("--sign ");
+					optionsBuilder.Append("--clear ");
 					passphraseNeeded = true;
 					break;
 				case Commands.Encrypt:
@@ -414,6 +422,9 @@ namespace Emmanuel.Cryptography.GnuPG
                     break;
                 case Commands.AddKey:
                     optionsBuilder.Append("--import ");
+                    break;
+                case Commands.DelKey:
+                    optionsBuilder.Append("--delete-key ");
                     break;
                 case Commands.Fingerprint:
                     optionsBuilder.Append("--fingerprint "+_originator+" ");
@@ -526,7 +537,18 @@ namespace Emmanuel.Cryptography.GnuPG
 			pInfo.RedirectStandardInput = true;
 			pInfo.RedirectStandardOutput = true;
 			pInfo.RedirectStandardError = true;
-			_processObject = Process.Start(pInfo);
+            pInfo.StandardErrorEncoding = Encoding.GetEncoding(437);
+            pInfo.StandardOutputEncoding = Encoding.UTF8;
+            _outputString = "";
+			_errorString = "";
+            _processObject = Process.Start(pInfo);
+            // Create two threads to read both output/error streams without creating a deadlock
+            ThreadStart outputEntry = new ThreadStart(StandardOutputReader);
+            Thread outputThread = new Thread(outputEntry);
+            outputThread.Start();
+            ThreadStart errorEntry = new ThreadStart(StandardErrorReader);
+            Thread errorThread = new Thread(errorEntry);
+            errorThread.Start();
 
 			// Send pass phrase, if any
 			if (_passphrase != null && _passphrase != "")
@@ -543,22 +565,13 @@ namespace Emmanuel.Cryptography.GnuPG
             }
 			_processObject.StandardInput.Close();
 
-			_outputString = "";
-			_errorString = "";
 
-			// Create two threads to read both output/error streams without creating a deadlock
-			ThreadStart outputEntry = new ThreadStart(StandardOutputReader);
-			Thread outputThread = new Thread(outputEntry);
-			outputThread.Start();
-			ThreadStart errorEntry = new ThreadStart(StandardErrorReader);
-			Thread errorThread = new Thread(errorEntry);
-			errorThread.Start();
 
 			if (_processObject.WaitForExit(ProcessTimeOutMilliseconds))
 			{
 				// Process exited before timeout...
 				// Wait for the threads to complete reading output/error (but use a timeout!)
-				if (!outputThread.Join(ProcessTimeOutMilliseconds/2))
+                if (!outputThread.Join(ProcessTimeOutMilliseconds / 2))
 				{
 					outputThread.Abort();
 				}
@@ -621,12 +634,10 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// </summary>
 		public void StandardErrorReader()
 		{
-			string error = _processObject.StandardError.ReadToEnd();
 			lock(this)
 			{
 				_errorString = error;
 			}
-		}
 
 		// Variables used to store property values (prefix: underscore "_")
 		private Commands _command = Commands.SignAndEncrypt;
