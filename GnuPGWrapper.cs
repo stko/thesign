@@ -632,12 +632,14 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// 
 		/// <p/>Updates the private variable _errorString (locks it first)
 		/// </summary>
-		public void StandardErrorReader()
-		{
-			lock(this)
-			{
-				_errorString = error;
-			}
+        public void StandardErrorReader()
+        {
+            string error = _processObject.StandardOutput.ReadToEnd();
+            lock (this)
+            {
+                _errorString = error;
+            }
+        }
 
 		// Variables used to store property values (prefix: underscore "_")
 		private Commands _command = Commands.SignAndEncrypt;

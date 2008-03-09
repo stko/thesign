@@ -6,7 +6,7 @@ namespace TheSign
 {
     class build
     {
-        static public string buildver="Build 11 2008/03/02 10:41:42";
+        static public string buildver="Build 12 2008/03/09 13:37:09";
         static public string version = "0.1 Beta";
     }
 }
