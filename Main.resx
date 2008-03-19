@@ -123,7 +123,44 @@
   <metadata name="openFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>126, 17</value>
   </metadata>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>250, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripButtoncheckEmailVality.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAUtJREFUOE9jZMAC
+        /v9n+I9NnJGRgREqDqRNZBgYDMQw1IE048MMDMasDAz2GgwMPc4MDPszsRqALohuIAPD0mAGhmOVDAwX
+        F2JzKVYxZEMYGE51MjBc2sTIePkeimIHh5z/6NjePuu/mVkKireAmg8zMFz+wMh46RrcgIqKE/9huL7m
+        6P85fZv+N1bv/J+YuAEjTICa/wM1r2BguMANNgBZM4h9c/fE//9flP3/fCEAQzMT06X/rq5nwC7Fqnla
+        1/r/fx/EY9XIy3vxf2zsKbhLwYbk5OTABUC2vzoc+f//VR0UAzL8+//Ly1/4n5uL8CZIrZWVFcQAmCGb
+        Z7b+/39B7v+vw3woBhyqlvhfXo6qGaQHbsCJEyfAhmCLBWxiILUgPSgGgASQMXK8o8vB+EQbAPMmMk3Q
+        BbhsRRbH6wKYQpit2AwEGwAiKMEAQg8fxMDXuS0AAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="toolStripButtonSendFileandSig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAINJREFUOE/Nkd0J
+        wCAMhDOXTw7kAG7lGtkq5SyRKEa0hVLh/Iv5vCjRb5sIiaoUkmOjjwAxJlGNABubusmZxWoE2BhgHWRM
+        xnoFQLxBvFstwINVSEqpWfeSPEAI4QbsQvCd6hg5DcDMFWJfejXHWeR0AGycagugJY7j9w5m5dUS0L3R
+        BW3l9i6OS6KFAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="toolStripButtonSendSignaturesOnly.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAYNJREFUOE+9kT9I
+        QlEUh88TmsSyjEiJFByMkAgMh4egEEaDkBANDRJGQ4U2pmEQDRFFFC79gRaHImgolIhwCJLkZYZPpaKG
+        aiuahLYgfr33Qkt5Qxp04dx7OdzvO+dwGaptMUQ9bUTdLTXgljoiewfRSi/R6USVApOKqL+LaGeQKDlD
+        lI1UIehsJZqyEcVGiVJLRLkow+QfygQOhw+VYbdPwmodg9kcgNEYhla7CwFOEOULDJO7KQmCQQ7FmJs9
+        x/ZqFPOhE3i9h3C54mDZJEymK2g0WUGQhwDvEfFKSfATFu938TDwMo033o0h9xEslgsYDBkolVkoFDk4
+        nWmpU1l4ffkAH08jwL0N4PVIbPZBp8tIoEqVhceTKnUqSXw+XykhVn9NDAPXZuCyGYXjBjxG1BgfWINe
+        z8Pv/x5TfMuy7JegKIltLQhV2/GeqMfzvhq3G41ILzbhLNSKQKAcFpmSgOM4SSL3C3I58a3IlAnERLXx
+        K0FxxMrz/zuQG08aQdz+Ep8wnuKv52/2MwAAAABJRU5ErkJggg==
+</value>
+  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAEAf4AAAAEACAAoTAAAFgAAACgAAAB/AAAAAAEAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

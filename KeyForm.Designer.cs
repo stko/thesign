@@ -98,7 +98,7 @@
             this.toolStripButtonTrustultimate,
             this.toolStripSeparator4,
             this.toolStripButton2});
-            this.KeyStrip.Location = new System.Drawing.Point(46, 0);
+            this.KeyStrip.Location = new System.Drawing.Point(38, 0);
             this.KeyStrip.Name = "KeyStrip";
             this.KeyStrip.Size = new System.Drawing.Size(214, 25);
             this.KeyStrip.TabIndex = 6;
@@ -231,8 +231,8 @@
             // 
             // toolStripContainer1.TopToolStripPanel
             // 
-            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.KeyStrip);
             this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip1);
+            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.KeyStrip);
             // 
             // toolStrip1
             // 
@@ -263,7 +263,7 @@
             this.Controls.Add(this.toolStripContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "KeyForm";
-            this.Text = "TheSign -  Available Public Keys";
+            this.Text = "TheSign - Public Key Ring";
             this.Shown += new System.EventHandler(this.KeyForm_Shown);
             this.KeyStrip.ResumeLayout(false);
             this.KeyStrip.PerformLayout();

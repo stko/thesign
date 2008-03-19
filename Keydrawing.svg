@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   id="svg3212"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   sodipodi:docbase="P:\Workcopies\TheSign"
+   sodipodi:docname="Keydrawing.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <defs
+     id="defs3214" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="635.67502"
+     inkscape:cy="352.83558"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:object-points="false"
+     inkscape:object-nodes="false"
+     objecttolerance="50"
+     inkscape:object-paths="false"
+     inkscape:window-width="1280"
+     inkscape:window-height="710"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4" />
+  <metadata
+     id="metadata3217">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="opacity:0.81818183;fill:#ff0000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 145.72768,660.92914 C 72.390528,660.92914 12.852678,720.43574 12.852678,793.77289 C 12.852678,867.11004 72.390528,926.64792 145.72768,926.64789 C 201.56843,926.64789 249.40016,892.14916 269.04018,843.30414 L 665.32143,839.89789 L 723.72773,770.46039 L 671.75893,739.30414 L 631.04018,786.46039 L 586.75893,731.46039 L 549.63393,788.58539 L 506.75893,713.58539 L 453.19643,768.58539 L 397.47768,722.17914 L 355.35268,783.58539 L 322.47768,745.74164 L 270.29018,747.58539 C 251.51156,697.00847 202.81947,660.92914 145.72768,660.92914 z M 88.571428,749.49164 C 113.01715,749.49164 132.85268,769.32718 132.85268,793.77289 C 132.85269,818.21861 113.01714,838.05414 88.571428,838.05414 C 64.125718,838.05415 44.290178,818.2186 44.290178,793.77289 C 44.290178,769.32718 64.125718,749.49164 88.571428,749.49164 z "
+       id="path3220" />
+    <path
+       style="fill:#0abe1c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 1448.7155,417.875 C 1387.4049,417.875 1335.7862,459.50149 1320.4968,516 L 918.80926,521.125 L 881.24676,585 C 872.98112,599.05871 936.05926,584.03125 936.05926,584.03125 L 968.90301,621.90625 L 1011.0593,560.46875 L 1066.778,606.90625 L 1120.3405,551.90625 L 1163.1843,626.90625 L 1200.3405,569.75 L 1244.6218,624.75 L 1285.3405,577.625 L 1327.653,605.5 C 1348.5214,651.54675 1394.8932,683.59375 1448.7155,683.59375 C 1522.0527,683.59372 1581.5905,624.08715 1581.5905,550.75 C 1581.5905,477.41282 1522.0527,417.87497 1448.7155,417.875 z M 1505.8718,506.46875 C 1530.3175,506.46871 1550.153,526.30429 1550.153,550.75 C 1550.153,575.19568 1530.3175,595.03125 1505.8718,595.03125 C 1481.426,595.03122 1461.5905,575.19571 1461.5905,550.75 C 1461.5905,526.30425 1481.426,506.46875 1505.8718,506.46875 z "
+       id="path3231" />
+    <rect
+       style="opacity:1;fill:#916f6f;stroke:#000000;stroke-opacity:1"
+       id="rect2210"
+       width="512.85712"
+       height="342.85715"
+       x="210"
+       y="455.21933" />
+    <path
+       sodipodi:type="arc"
+       style="opacity:1;fill:#916f6f;stroke:#000000;stroke-opacity:1"
+       id="path2212"
+       sodipodi:cx="325"
+       sodipodi:cy="864.50507"
+       sodipodi:rx="30.714285"
+       sodipodi:ry="30.714285"
+       d="M 355.71428 864.50507 A 30.714285 30.714285 0 1 1  294.28572,864.50507 A 30.714285 30.714285 0 1 1  355.71428 864.50507 z" />
+  </g>
+</svg>

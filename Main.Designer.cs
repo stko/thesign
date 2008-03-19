@@ -42,27 +42,30 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bugtrackerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.ActionButton = new System.Windows.Forms.Button();
-            this.ActionComboBox = new System.Windows.Forms.ComboBox();
+            this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButtoncheckEmailVality = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButtonSendFileandSig = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSendSignaturesOnly = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1.SuspendLayout();
-            this.panel1.SuspendLayout();
+            this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
+            this.toolStripContainer1.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // Output
             // 
             this.Output.AllowDrop = true;
-            this.Output.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
+            this.Output.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.Output.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Output.Location = new System.Drawing.Point(0, 27);
+            this.Output.Location = new System.Drawing.Point(0, 55);
             this.Output.Multiline = true;
             this.Output.Name = "Output";
             this.Output.ReadOnly = true;
             this.Output.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.Output.Size = new System.Drawing.Size(646, 220);
+            this.Output.Size = new System.Drawing.Size(646, 226);
             this.Output.TabIndex = 0;
             this.Output.Text = "Please drag the files to sign into here";
             this.Output.DragDrop += new System.Windows.Forms.DragEventHandler(this.Output_DragDrop);
@@ -143,10 +146,10 @@
             // 
             // aboutToolStripMenuItem
             // 
-            this.aboutToolStripMenuItem.Enabled = false;
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
             this.aboutToolStripMenuItem.Text = "&About..";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // bugtrackerToolStripMenuItem
             // 
@@ -159,54 +162,84 @@
             // 
             this.openFileDialog.FileName = "openFileDialog1";
             // 
-            // panel1
+            // toolStripContainer1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.label1);
-            this.panel1.Controls.Add(this.ActionButton);
-            this.panel1.Controls.Add(this.ActionComboBox);
-            this.panel1.Location = new System.Drawing.Point(0, 248);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(646, 29);
-            this.panel1.TabIndex = 3;
+            this.toolStripContainer1.BottomToolStripPanelVisible = false;
             // 
-            // label1
+            // toolStripContainer1.ContentPanel
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 10);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(40, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Action:";
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(646, 4);
+            this.toolStripContainer1.LeftToolStripPanelVisible = false;
+            this.toolStripContainer1.Location = new System.Drawing.Point(0, 27);
+            this.toolStripContainer1.Name = "toolStripContainer1";
+            this.toolStripContainer1.RightToolStripPanelVisible = false;
+            this.toolStripContainer1.Size = new System.Drawing.Size(646, 29);
+            this.toolStripContainer1.TabIndex = 4;
+            this.toolStripContainer1.Text = "toolStripContainer1";
             // 
-            // ActionButton
+            // toolStripContainer1.TopToolStripPanel
             // 
-            this.ActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.ActionButton.Location = new System.Drawing.Point(569, 3);
-            this.ActionButton.Name = "ActionButton";
-            this.ActionButton.Size = new System.Drawing.Size(65, 23);
-            this.ActionButton.TabIndex = 3;
-            this.ActionButton.Text = "Go...";
-            this.ActionButton.UseVisualStyleBackColor = true;
-            this.ActionButton.Click += new System.EventHandler(this.ActionButton_Click);
+            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip1);
             // 
-            // ActionComboBox
+            // toolStrip1
             // 
-            this.ActionComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.ActionComboBox.FormattingEnabled = true;
-            this.ActionComboBox.Location = new System.Drawing.Point(50, 5);
-            this.ActionComboBox.Name = "ActionComboBox";
-            this.ActionComboBox.Size = new System.Drawing.Size(513, 21);
-            this.ActionComboBox.TabIndex = 2;
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButtoncheckEmailVality,
+            this.toolStripSeparator2,
+            this.toolStripButtonSendFileandSig,
+            this.toolStripButtonSendSignaturesOnly});
+            this.toolStrip1.Location = new System.Drawing.Point(3, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(118, 25);
+            this.toolStrip1.TabIndex = 0;
+            // 
+            // toolStripButtoncheckEmailVality
+            // 
+            this.toolStripButtoncheckEmailVality.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtoncheckEmailVality.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtoncheckEmailVality.Image")));
+            this.toolStripButtoncheckEmailVality.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtoncheckEmailVality.Name = "toolStripButtoncheckEmailVality";
+            this.toolStripButtoncheckEmailVality.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtoncheckEmailVality.Text = "toolStripButton1";
+            this.toolStripButtoncheckEmailVality.ToolTipText = "Check Validity of actual selected Email";
+            this.toolStripButtoncheckEmailVality.Click += new System.EventHandler(this.toolStripButtoncheckEmailVality_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButtonSendFileandSig
+            // 
+            this.toolStripButtonSendFileandSig.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSendFileandSig.Enabled = false;
+            this.toolStripButtonSendFileandSig.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSendFileandSig.Image")));
+            this.toolStripButtonSendFileandSig.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSendFileandSig.Name = "toolStripButtonSendFileandSig";
+            this.toolStripButtonSendFileandSig.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonSendFileandSig.Text = "toolStripButton1";
+            this.toolStripButtonSendFileandSig.ToolTipText = "Send File and Signature...";
+            this.toolStripButtonSendFileandSig.Click += new System.EventHandler(this.toolStripButtonSendFileandSig_Click);
+            // 
+            // toolStripButtonSendSignaturesOnly
+            // 
+            this.toolStripButtonSendSignaturesOnly.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSendSignaturesOnly.Enabled = false;
+            this.toolStripButtonSendSignaturesOnly.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSendSignaturesOnly.Image")));
+            this.toolStripButtonSendSignaturesOnly.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSendSignaturesOnly.Name = "toolStripButtonSendSignaturesOnly";
+            this.toolStripButtonSendSignaturesOnly.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonSendSignaturesOnly.Text = "toolStripButtonSendSignaturesOnly";
+            this.toolStripButtonSendSignaturesOnly.ToolTipText = "Send Signatures Only";
+            this.toolStripButtonSendSignaturesOnly.Click += new System.EventHandler(this.toolStripButtonSendSignaturesOnly_Click);
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(646, 280);
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.toolStripContainer1);
             this.Controls.Add(this.Output);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -215,8 +248,12 @@
             this.Text = "TheSign - (C) Steffen Köhler ";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.toolStripContainer1.TopToolStripPanel.ResumeLayout(false);
+            this.toolStripContainer1.TopToolStripPanel.PerformLayout();
+            this.toolStripContainer1.ResumeLayout(false);
+            this.toolStripContainer1.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -237,10 +274,12 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem bugtrackerToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button ActionButton;
-        private System.Windows.Forms.ComboBox ActionComboBox;
+        private System.Windows.Forms.ToolStripContainer toolStripContainer1;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton toolStripButtoncheckEmailVality;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSendFileandSig;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSendSignaturesOnly;
     }
 }
 

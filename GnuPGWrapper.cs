@@ -634,7 +634,7 @@ namespace Emmanuel.Cryptography.GnuPG
 		/// </summary>
         public void StandardErrorReader()
         {
-            string error = _processObject.StandardOutput.ReadToEnd();
+            string error = _processObject.StandardError.ReadToEnd();
             lock (this)
             {
                 _errorString = error;
