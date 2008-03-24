@@ -48,6 +48,10 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonSendFileandSig = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonSendSignaturesOnly = new System.Windows.Forms.ToolStripButton();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.keyDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.filesSignaturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.menuStrip1.SuspendLayout();
             this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
             this.toolStripContainer1.SuspendLayout();
@@ -87,6 +91,7 @@
             // 
             this.theSignToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.printCertificateToolStripMenuItem,
+            this.toolStripMenuItem1,
             this.toolStripSeparator1,
             this.quitToolStripMenuItem});
             this.theSignToolStripMenuItem.Name = "theSignToolStripMenuItem";
@@ -191,7 +196,7 @@
             this.toolStripButtonSendSignaturesOnly});
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(118, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(87, 25);
             this.toolStrip1.TabIndex = 0;
             // 
             // toolStripButtoncheckEmailVality
@@ -233,6 +238,29 @@
             this.toolStripButtonSendSignaturesOnly.Text = "toolStripButtonSendSignaturesOnly";
             this.toolStripButtonSendSignaturesOnly.ToolTipText = "Send Signatures Only";
             this.toolStripButtonSendSignaturesOnly.Click += new System.EventHandler(this.toolStripButtonSendSignaturesOnly_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.keyDataToolStripMenuItem,
+            this.filesSignaturesToolStripMenuItem});
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
+            this.toolStripMenuItem1.Text = "&Backup...";
+            // 
+            // keyDataToolStripMenuItem
+            // 
+            this.keyDataToolStripMenuItem.Name = "keyDataToolStripMenuItem";
+            this.keyDataToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.keyDataToolStripMenuItem.Text = "&Key Data...";
+            this.keyDataToolStripMenuItem.Click += new System.EventHandler(this.keyDataToolStripMenuItem_Click);
+            // 
+            // filesSignaturesToolStripMenuItem
+            // 
+            this.filesSignaturesToolStripMenuItem.Name = "filesSignaturesToolStripMenuItem";
+            this.filesSignaturesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.filesSignaturesToolStripMenuItem.Text = "&Files && Signatures...";
+            this.filesSignaturesToolStripMenuItem.Click += new System.EventHandler(this.filesSignaturesToolStripMenuItem_Click);
             // 
             // Main
             // 
@@ -280,6 +308,10 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton toolStripButtonSendFileandSig;
         private System.Windows.Forms.ToolStripButton toolStripButtonSendSignaturesOnly;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem keyDataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem filesSignaturesToolStripMenuItem;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
     }
 }
 
