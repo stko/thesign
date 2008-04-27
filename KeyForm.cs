@@ -256,7 +256,12 @@ namespace TheSign
                             gpg.command = Commands.AddKey;
                             gpg.armor = true;
                             gpg.passphrase = "";
-                            gpg.ExecuteCommand(key, "", out outputText, out errorText);
+                            try
+                            {
+                                gpg.ExecuteCommand(key, "", out outputText, out errorText);
+                            }
+                            catch
+                            { }
                             if (outputText != "")
                             {
                                 MessageBox.Show("GPG replies oText:\n" + outputText);
@@ -264,7 +269,7 @@ namespace TheSign
                             }
                             else
                             {
-                                MessageBox.Show("GPG replies eText:\n" + outputText);
+                                MessageBox.Show("GPG replies eText:\n" + errorText);
                                 buildTree();
                             }
 

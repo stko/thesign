@@ -8,6 +8,7 @@ using System.Text; // for StringBuilder class
 using System.Diagnostics; // for Process class
 using System.IO; // for StreamWriter/StreamReader classes
 using System.Threading; // for Thread class
+using System.Windows.Forms;
 
 namespace Emmanuel.Cryptography.GnuPG
 {
@@ -541,7 +542,16 @@ namespace Emmanuel.Cryptography.GnuPG
             pInfo.StandardOutputEncoding = Encoding.UTF8;
             _outputString = "";
 			_errorString = "";
-            _processObject = Process.Start(pInfo);
+            errorText = "";
+            try
+            {
+                _processObject = Process.Start(pInfo);
+            }
+            catch
+            {
+                MessageBox.Show("No GPG found - Installation incomplete?", "TheSign Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return;
+            }
             // Create two threads to read both output/error streams without creating a deadlock
             ThreadStart outputEntry = new ThreadStart(StandardOutputReader);
             Thread outputThread = new Thread(outputEntry);

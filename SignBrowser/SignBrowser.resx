@@ -117,53 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="File.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="Signed.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="SignedBy.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="Signmissing.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="openFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>126, 17</value>
-  </metadata>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>250, 17</value>
+  <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>127, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="toolStripButtoncheckEmailVality.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAUxJREFUOE9jZMAC
-        /v9n+I9NnJGRgREqDqRNZBgYDMQw1IE048MMDMasDAz2GgwMPc4MDPszsRqALohuIAPD0mAGhmOVDAwX
-        F2JzKVYxZEMYGE51MjBc2sTIePkeimIHh5z/6NjePuu/mVkKireAmg8zMFz+wMh44RrcgIqKE/9huL7m
-        6P85fZv+N1bv/J+YuAEjTICa/zMyXlzBwHCBG2wAsmYQ++buif//vyj7//lCAIZmJqZL/11dz4BdilXz
-        tK71//8+iMeqkZf34v/Y2FNwl4INycnJgQuAbH91OPL//6s6KAZk+Pf/l5e/8D83F+FNkForKyuIATBD
-        Ns9s/f//gtz/X4f5UAw4VC3xv7wcVTNID9yAEydOgA3BFgvYxEBqQXpQDAAJIGPkeEeXg/GJNgDmTWSa
-        oAtw2YosjtcFMIUwW7EZCDYARFCCATnlH8HzP0hHAAAAAElFTkSuQmCC
-</value>
-  </data>
-  <data name="toolStripButtonSendFileandSig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAINJREFUOE/Nkd0J
-        wCAMhDOXTw7kAG7lGtkq5SyRKEa0hVLh/Iv5vCjRb5sIiaoUkmOjjwAxJlGNABubusmZxWoE2BhgHWRM
-        xnoFQLxBvFstwINVSEqpWfeSPEAI4QbsQvCd6hg5DcDMFWJfejXHWeR0AGycagugJY7j9w5m5dUS0L3R
-        BW3l9i6OS6KFAAAAAElFTkSuQmCC
-</value>
-  </data>
-  <data name="toolStripButtonSendSignaturesOnly.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAYRJREFUOE+9kT9I
-        QlEUxs8TmsSyjEiJFByMkAgMh4egEEaDkBANDRJGQ4U2pmEQDRFFFC79gRaHImgolIhwCJLEzPA9paKG
-        aiuahLYgvnwvfKW8IQ268N17Odzvd87HZai2xRD1tBF1t9Rgt9QR2TuIVnqJTieqBJhURP1dRDuDRMkZ
-        Ij5SBaCzlWjKRhQbJUovEeWiDJN/KAM4HD5Uym6fhNU6BrM5AKMxDK12F0VzgihfYBjuRgIEgymUNDd7
-        ju3VKOZDJ/B6D+FyxcGySZhMV9Bo+CIgD4bh94g4pQj4aRbud/Ew8DKNN86NIfcRLJYLGAxZKJU8FIoc
-        nM6MOKmseX35AB9PI8C9DeD0SGz2QafLikaViofHk5YmFSE+n08qCN1fE8PAtRm4bEbhuAGPETXGB9ag
-        13Pw+79jCm9Zlv0ClCCxrYVi13a8J+rxvK/G7UYjMotNOAu1IhAoNwseCZBKpUSI3C/I1YS3gqcMIBSq
-        1a8ApYiV5/9PIBdPjCBsf9EnKHTirDicEDEAAAAASUVORK5CYII=
-</value>
-  </data>
-  <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>349, 17</value>
-  </metadata>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAEAf4AAAAEACAAoTAAAFgAAACgAAAB/AAAAAAEAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
