@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<thesignauthoritylist>
+	<department name="SY_E" needed="1">
+		<authoritee>
+			<email>steffen.koehler@systech-eu.com</email>
+			<duration mandatory="1">
+				<from>04/07/08</from>
+				<to>04/07/08</to>
+			</duration>
+		</authoritee>
+		<authoritee>
+			<email>steffen@koehlers.de</email>
+			<duration mandatory="1">
+				<from>04/07/08</from>
+				<to>04/07/08</to>
+			</duration>
+		</authoritee>
+		<authoritee>
+			<email>skoehle6@.com</email>
+			<duration mandatory="1">
+				<from>04/07/08</from>
+				<to>04/07/08</to>
+			</duration>
+		</authoritee>
+	</department>
+	<department name="SY_ME" needed="1">
+		<authoritee>
+			<email>sven.herrmann@systech-eu.com</email>
+			<duration mandatory="1">
+				<from>04/07/08</from>
+				<to>04/07/08</to>
+			</duration>
+		</authoritee>
+	</department>
+</thesignauthoritylist>			
