@@ -26,12 +26,13 @@ namespace SignBrowser
             gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG";
             gpg.passphrase = "";
             folderBrowserDialog.SelectedPath = Path.GetDirectoryName(Application.ExecutablePath);
+            ExportComboBox.SelectedIndex = 0;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, EventArgs e)
         {
             SignGridView.Rows.Clear();
-            string[] directorylist= Directory.GetFiles(folderBrowserDialog.SelectedPath);
+            string[] directorylist = Directory.GetFiles(folderBrowserDialog.SelectedPath);
             processBar.Maximum = directorylist.Length;
             processBar.Minimum = 0;
             processBar.Value = 0;
@@ -53,14 +54,14 @@ namespace SignBrowser
                         gpg.passphrase = "";
                         try
                         {
-                            gpg.ExecuteCommand("", fileName+".sig", out outputText, out errorText);
+                            gpg.ExecuteCommand("", fileName + ".sig", out outputText, out errorText);
                         }
                         catch
                         {
                         }
-                        signs=EvaluateResult(errorText);
+                        signs = EvaluateResult(errorText);
                         gpg.batch = true;
-                        string signature="";
+                        string signature = "";
                         foreach (string thissign in signs)
                         {
                             signature += thissign + ";";
@@ -68,7 +69,7 @@ namespace SignBrowser
                         SignGridView.Rows[SignGridView.RowCount - 1].Cells[2].Value = signature;
                         if (signature != "")
                         {
-                            string missdepartments="";
+                            string missdepartments = "";
                             if (checkAuthorities(ref missdepartments, signs))
                             {
                                 SignGridView.Rows[SignGridView.RowCount - 1].Cells[1].Value = "Yes";
@@ -88,17 +89,19 @@ namespace SignBrowser
                     }
                 }
             }
+            GoButton.Enabled = SignGridView.RowCount > 0;
         }
+
         private string[] EvaluateResult(string text)
         {
-            ArrayList signs =new ArrayList();
+            ArrayList signs = new ArrayList();
             foreach (string line in text.Split('\n'))
             {
                 if (line.ToLower().Contains("signature"))
                 {
                     if (line.ToLower().Contains("good"))
                     {
-                        Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase); 
+                        Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
                         Match email = r.Match(line);
                         if (!signs.Contains(email.Value))
                         {
@@ -111,7 +114,7 @@ namespace SignBrowser
             return (string[])signs.ToArray(typeof(string));
         }
 
-        private bool checkAuthorities( ref string missings, string[] signatures)
+        private bool checkAuthorities(ref string missings, string[] signatures)
         {
             Hashtable foundDepartments = new Hashtable();
             missings = "";
@@ -148,26 +151,28 @@ namespace SignBrowser
                 }
             }
 
-            return missings == "" ;
+            return missings == "";
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void FolderDialogButton_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
+                authDepartments.Clear();
                 SignGridView.RowCount = 0;
+                processBar.Value = 0;
                 if (System.IO.File.Exists(folderBrowserDialog.SelectedPath + "\\authorities.xml"))
                 {
                     try
                     {
                         xDoc = new XmlDocument();
                         xDoc.Load(folderBrowserDialog.SelectedPath + "\\authorities.xml");
-                        XmlNodeList departments = xDoc.GetElementsByTagName("department"); 
+                        XmlNodeList departments = xDoc.GetElementsByTagName("department");
                         foreach (XmlNode thisnode in departments)
                         {
                             try
                             {
-                                string department=thisnode.Attributes.GetNamedItem("name").Value;
+                                string department = thisnode.Attributes.GetNamedItem("name").Value;
                                 try
                                 {
                                     authDepartments[department] = Convert.ToInt32(thisnode.Attributes.GetNamedItem("needed").Value);
@@ -193,6 +198,35 @@ namespace SignBrowser
                     StartButton.Enabled = false;
                     StartButton.Text = "No authority file found...";
                 }
+            }
+        }
+
+        private void GoButton_Click(object sender, EventArgs e)
+        {
+
+            switch (ExportComboBox.SelectedIndex)
+            {
+                case 0:
+                    string clip = "";
+                    foreach (DataGridViewRow row in SignGridView.Rows)
+                    {
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            if (cell.Value != null)
+                            {
+                                clip += cell.Value.ToString() + "\t";
+                            }
+                            else
+                            {
+                                clip +=  "\t";
+                            }
+                        }
+                        clip += "\n";
+                    }
+                    Clipboard.SetText(clip);
+                    break;
+                default:
+                    break;
             }
         }
 
