@@ -179,7 +179,7 @@ namespace TheSign
 
                 string outputText = "";
                 string errorText = "";
-                if (testDialog.ShowDialog() == DialogResult.OK)
+                if (testDialog.ShowDialog("Sign last output text") == DialogResult.OK)
                 {
                     gpg.passphrase = testDialog.passPhraseText.Text;
                     if (!testDialog.storePassPhrase.Checked)
@@ -532,7 +532,7 @@ namespace TheSign
             clearWindow();
             string outputText = "";
             string errorText = "";
-            if (testDialog.ShowDialog() == DialogResult.OK)
+            if (testDialog.ShowDialog("Sign file: " + Path.GetFileName(fileName)) == DialogResult.OK)
             {
                 gpg.passphrase = testDialog.passPhraseText.Text;
                 if (!testDialog.storePassPhrase.Checked)

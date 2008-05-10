@@ -309,7 +309,8 @@ namespace TheSign
                 {
                     return;
                 }
-                if (testDialog.ShowDialog() == DialogResult.OK)
+                TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                if (testDialog.ShowDialog("Confirm signature from "+myuser.User) == DialogResult.OK)
                 {
                     gpg.passphrase = testDialog.passPhraseText.Text;
                     if (!testDialog.storePassPhrase.Checked)
@@ -319,7 +320,6 @@ namespace TheSign
                     string errorText = "";
                     gpg.command = Commands.SignKey;
                     gpg.armor = true;
-                    TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
                     gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                     if (errorText != "")
                     {

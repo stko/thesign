@@ -276,7 +276,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
-            this.Text = "TheSign - (C) Steffen Köhler ";
+            this.Text = "TheSign - © Steffen Köhler ";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.toolStripContainer1.TopToolStripPanel.ResumeLayout(false);

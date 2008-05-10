@@ -273,10 +273,10 @@ namespace Emmanuel.Cryptography.GnuPG
 		{
 			set
 			{
-				//_homedirectory = value; // das geht nur bei absoluten Pfaden!
-                _homedirectory = "\".\"";
+				 _homedirectory = Path.GetFullPath(value); // das geht nur bei absoluten Pfaden!
+                // _homedirectory = "\".\"";
 				// For now, let's assume the gpg.exe program is installed in the homedirectory too
-				_bindirectory = value;
+                 _bindirectory = _homedirectory;
 			}
 		}
 

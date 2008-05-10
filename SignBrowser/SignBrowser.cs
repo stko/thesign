@@ -10,6 +10,7 @@ using System.IO;
 using System.Xml;
 using Emmanuel.Cryptography.GnuPG;
 using System.Text.RegularExpressions;
+using TheSign;
 
 
 namespace SignBrowser
@@ -27,6 +28,8 @@ namespace SignBrowser
             gpg.passphrase = "";
             folderBrowserDialog.SelectedPath = Path.GetDirectoryName(Application.ExecutablePath);
             ExportComboBox.SelectedIndex = 0;
+            Text = Text + " | " + build.version + "  " + build.buildver;
+
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -221,7 +224,7 @@ namespace SignBrowser
                                 clip +=  "\t";
                             }
                         }
-                        clip += "\n";
+                        clip += "\r\n";
                     }
                     Clipboard.SetText(clip);
                     break;

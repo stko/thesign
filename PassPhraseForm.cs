@@ -11,9 +11,16 @@ namespace TheSign
 {
     public partial class PassphraseForm : Form
     {
-        public PassphraseForm()
+        public  PassphraseForm()
         {
             InitializeComponent();
+        }
+
+        public System.Windows.Forms.DialogResult ShowDialog(string title)
+        {
+            Text=title;
+            return base.ShowDialog();
+            
         }
     }
 }
