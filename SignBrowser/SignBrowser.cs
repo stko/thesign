@@ -21,6 +21,12 @@ namespace SignBrowser
         XmlDocument xDoc;
         Hashtable authDepartments = new Hashtable();
 
+        class signdata
+        {
+            public string email;
+            public DateTime date;
+        }
+
         public SignBrowser()
         {
             InitializeComponent();
@@ -48,7 +54,7 @@ namespace SignBrowser
                     SignGridView.Rows[SignGridView.RowCount - 1].Cells[0].Value = Path.GetFileName(fileName);
                     if (System.IO.File.Exists(fileName + ".sig"))
                     {
-                        string[] signs = new string[0];
+                        signdata[] signs = new signdata[0];
                         string outputText = "";
                         string errorText = "";
                         gpg.command = Commands.Verify;
@@ -65,7 +71,7 @@ namespace SignBrowser
                         signs = EvaluateResult(errorText);
                         gpg.batch = true;
                         string signature = "";
-                        foreach (string thissign in signs)
+                        foreach (signdata thissign in signs)
                         {
                             signature += thissign + ";";
                         }
@@ -95,9 +101,10 @@ namespace SignBrowser
             GoButton.Enabled = SignGridView.RowCount > 0;
         }
 
-        private string[] EvaluateResult(string text)
+        private signdata[] EvaluateResult(string text)
         {
             ArrayList signs = new ArrayList();
+            DateTime lastDate = DateTime.FromBinary(0);
             foreach (string line in text.Split('\n'))
             {
                 if (line.ToLower().Contains("signature"))
@@ -106,29 +113,41 @@ namespace SignBrowser
                     {
                         Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
                         Match email = r.Match(line);
-                        if (!signs.Contains(email.Value))
+                        signdata thissign = new signdata();
+
+                        if (lastDate!=DateTime.FromBinary(0))
                         {
-                            signs.Add(email.Value);
+                            thissign.email=email.Value;
+                            thissign.date = lastDate;
+                            signs.Add(thissign);
+                            lastDate = DateTime.FromBinary(0);
                         }
                     }
 
                 }
+                // gpg: Signature made 02/14/08 08:45:40 
+                if (line.ToLower().Contains("gpg: signature made"))
+                {
+                    Regex r = new Regex(@"\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}", RegexOptions.IgnoreCase);
+                    Match datestring = r.Match(line);
+                    lastDate = DateTime.Parse(datestring.Value);
+                }
             }
-            return (string[])signs.ToArray(typeof(string));
+            return (signdata[])signs.ToArray(typeof(signdata));
         }
 
-        private bool checkAuthorities(ref string missings, string[] signatures)
+        private bool checkAuthorities(ref string missings, signdata[] signatures)
         {
             Hashtable foundDepartments = new Hashtable();
             missings = "";
-            foreach (string thisemail in signatures)
+            foreach (signdata thisemail in signatures)
             {
                 XmlNodeList emails = xDoc.GetElementsByTagName("email");
                 foreach (XmlNode thisnode in emails)
                 {
                     try
                     {
-                        if (thisnode.InnerText == thisemail)
+                        if (thisnode.InnerText == thisemail.email)
                         {
                             XmlNode parentnode = thisnode.ParentNode.ParentNode; //move up to the department node
                             string department = parentnode.Attributes.GetNamedItem("name").Value; //getting the Name of the department
@@ -221,7 +240,7 @@ namespace SignBrowser
                             }
                             else
                             {
-                                clip +=  "\t";
+                                clip += "\t";
                             }
                         }
                         clip += "\r\n";

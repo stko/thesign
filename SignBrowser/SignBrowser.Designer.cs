@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SignBrowser));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.button2 = new System.Windows.Forms.Button();
+            this.dateTimePicker1 = new System.Windows.Forms.DateTimePicker();
             this.GoButton = new System.Windows.Forms.Button();
             this.ExportComboBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -64,6 +65,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.dateTimePicker1);
             this.splitContainer1.Panel2.Controls.Add(this.GoButton);
             this.splitContainer1.Panel2.Controls.Add(this.ExportComboBox);
             this.splitContainer1.Panel2.Controls.Add(this.label1);
@@ -83,6 +85,14 @@
             this.button2.Text = "Select Directory...\r\n";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.FolderDialogButton_Click);
+            // 
+            // dateTimePicker1
+            // 
+            this.dateTimePicker1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.dateTimePicker1.Location = new System.Drawing.Point(184, 6);
+            this.dateTimePicker1.Name = "dateTimePicker1";
+            this.dateTimePicker1.Size = new System.Drawing.Size(200, 20);
+            this.dateTimePicker1.TabIndex = 6;
             // 
             // GoButton
             // 
@@ -167,11 +177,12 @@
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.StartButton.Enabled = false;
-            this.StartButton.Location = new System.Drawing.Point(3, 3);
+            this.StartButton.Location = new System.Drawing.Point(3, 6);
             this.StartButton.Name = "StartButton";
-            this.StartButton.Size = new System.Drawing.Size(378, 23);
+            this.StartButton.Size = new System.Drawing.Size(175, 20);
             this.StartButton.TabIndex = 1;
-            this.StartButton.Text = "Start";
+            this.StartButton.Text = "Check for the date:";
+            this.StartButton.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.StartButton.UseVisualStyleBackColor = true;
             this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
             // 
@@ -231,6 +242,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Signed;
         private System.Windows.Forms.DataGridViewTextBoxColumn SignedBy;
         private System.Windows.Forms.DataGridViewTextBoxColumn Signmissing;
+        private System.Windows.Forms.DateTimePicker dateTimePicker1;
     }
 }
 

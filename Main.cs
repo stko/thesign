@@ -360,8 +360,9 @@ namespace TheSign
             }
 
             // Open the two files.
-            fs1 = new FileStream(file1, FileMode.Open);
-            fs2 = new FileStream(file2, FileMode.Open);
+
+            fs1 = new FileStream(file1, FileMode.Open, FileAccess.Read);
+            fs2 = new FileStream(file2, FileMode.Open, FileAccess.Read);
 
             // Check the file sizes. If they are not the same, the files 
             // are not the same.
@@ -396,7 +397,6 @@ namespace TheSign
             return ((file1byte - file2byte) == 0);
         }
 
-
         private string MoveIntoFile(string fileName, string ext, string input, bool isFile, bool Append, bool overwrite)
         {
             fileName += ext;
@@ -428,6 +428,13 @@ namespace TheSign
                 Stream fs;
                 try
                 {
+                    // Remove read only first
+
+                    if(File.Exists(fileName))
+                    {
+                        File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
+                    }
+
                     if (Append)
                     {
                         fs = File.Open(fileName, FileMode.Append, FileAccess.Write);
@@ -448,12 +455,19 @@ namespace TheSign
                 }
                 inputStream.Close();
                 fs.Close();
+                File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
+
             }
             else
             {
+                if (File.Exists(fileName))
+                {
+                    File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
+                }
                 StreamWriter fs = new StreamWriter(fileName, Append);
                 fs.Write(input);
                 fs.Close();
+                File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
             }
             return fileName;
         }
@@ -546,6 +560,8 @@ namespace TheSign
                 if (errorText == "")
                 {
                     MoveIntoFile(fileName, ".sig", outputText, false, true, false);
+                    File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
+
                     Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed\r\n";
                     CheckSig(fileName + ".sig", false);
                 }
@@ -634,13 +650,13 @@ namespace TheSign
             launchURL("http://www.koehlers.de/wiki/doku.php?id=thesign:index");
         }
 
-        private void cleanupSigfile(string filename)
+        private void cleanupSigfile(string fileName)
         {
             Hashtable keys = new Hashtable();
             bool insidesign = false;
             string thisline;
             string totalsign = "";
-            StreamReader fs = new StreamReader(filename);
+            StreamReader fs = new StreamReader(fileName);
             while (!fs.EndOfStream)
             {
                 thisline = fs.ReadLine();
@@ -668,13 +684,18 @@ namespace TheSign
                 }
             }
             fs.Close();
-            StreamWriter fsout = new StreamWriter(filename);
+            if (File.Exists(fileName))
+            {
+                File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
+            }
+            StreamWriter fsout = new StreamWriter(fileName);
 
             foreach (string line in keys.Keys)
             {
                 fsout.WriteLine(line);
             }
             fsout.Close();
+            File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
 
         }
 
@@ -723,8 +744,6 @@ namespace TheSign
             }
         }
 
-
-
         private void filesSignaturesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
@@ -772,6 +791,7 @@ namespace TheSign
                 sender = sender;
                 
             }
+            MessageBox.Show("Data backup successful", "TheSign Data Backup");
         }
     }
 }
