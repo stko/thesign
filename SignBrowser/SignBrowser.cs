@@ -73,7 +73,7 @@ namespace SignBrowser
                         string signature = "";
                         foreach (signdata thissign in signs)
                         {
-                            signature += thissign + ";";
+                            signature += thissign.email + ";";
                         }
                         SignGridView.Rows[SignGridView.RowCount - 1].Cells[2].Value = signature;
                         if (signature != "")

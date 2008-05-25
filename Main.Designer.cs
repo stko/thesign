@@ -64,7 +64,7 @@
             this.Output.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.Output.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.Output.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.Output.Location = new System.Drawing.Point(0, 55);
             this.Output.Multiline = true;
             this.Output.Name = "Output";
