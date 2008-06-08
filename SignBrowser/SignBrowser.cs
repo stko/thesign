@@ -10,6 +10,8 @@ using System.IO;
 using System.Xml;
 using Emmanuel.Cryptography.GnuPG;
 using System.Text.RegularExpressions;
+using Outlook = Microsoft.Office.Interop.Outlook;
+using Microsoft.Win32;
 using TheSign;
 
 
@@ -30,9 +32,10 @@ namespace SignBrowser
         public SignBrowser()
         {
             InitializeComponent();
+            folderBrowserDialog.SelectedPath = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", Path.GetDirectoryName(Application.ExecutablePath));
+            checkfolder(folderBrowserDialog.SelectedPath);
             gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG";
             gpg.passphrase = "";
-            folderBrowserDialog.SelectedPath = Path.GetDirectoryName(Application.ExecutablePath);
             ExportComboBox.SelectedIndex = 0;
             Text = Text + " | " + build.version + "  " + build.buildver;
 
@@ -79,7 +82,7 @@ namespace SignBrowser
                         if (signature != "")
                         {
                             string missdepartments = "";
-                            if (checkAuthorities(ref missdepartments, signs))
+                            if (checkAuthorities(ref missdepartments, signs, SignGridView.RowCount - 1))
                             {
                                 SignGridView.Rows[SignGridView.RowCount - 1].Cells[1].Value = "Yes";
                             }
@@ -130,15 +133,55 @@ namespace SignBrowser
                 {
                     Regex r = new Regex(@"\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}", RegexOptions.IgnoreCase);
                     Match datestring = r.Match(line);
-                    lastDate = DateTime.Parse(datestring.Value);
+                    try
+                    {
+                        lastDate = DateTime.Parse(datestring.Value);
+                    }
+                    catch
+                    {
+                        sendBugReport("Auslesen des Datums in den Signatures",line);
+                    }
                 }
             }
             return (signdata[])signs.ToArray(typeof(signdata));
         }
 
-        private bool checkAuthorities(ref string missings, signdata[] signatures)
+        public void sendBugReport(string title, params object[] variables)
+        {
+            if (MessageBox.Show("TheSign Error detected", "TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            {
+                return;
+            }
+            string errorlist = "Error:\n" + title + "\n\nVariables:\n\n";
+            int i = 1;
+            foreach (object myobj in variables)
+            {
+                errorlist = errorlist + "var_" + i.ToString() + ":" + myobj.ToString() + "\r\n";
+                i++;
+            }
+            try
+            {
+                // connect to Outllok
+                Outlook._Application outLookApp = new Outlook.Application();
+
+                Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
+                actMail.To = "steffen@koehlers.de";
+                actMail.Subject = "TheSign Error Report";
+                actMail.Body = errorlist;
+                actMail.Display(true);
+
+            }
+            catch
+            {
+                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
+            }
+
+        }
+
+        private bool checkAuthorities(ref string missings, signdata[] signatures ,int actRowCount)
         {
             Hashtable foundDepartments = new Hashtable();
+            Hashtable departmentDates = new Hashtable();
             missings = "";
             foreach (signdata thisemail in signatures)
             {
@@ -159,6 +202,17 @@ namespace SignBrowser
                             {
                                 foundDepartments[department] = 1; ; //that's the first entry
                             }
+                            try
+                            {
+                                if ((DateTime) departmentDates[department]>thisemail.date)
+                                {
+                                    departmentDates[department]=thisemail.date;
+                                }
+                            }
+                            catch
+                            {
+                                departmentDates[department] = thisemail.date;//that's the first entry
+                            }
                         }
                     }
                     catch { }
@@ -172,54 +226,66 @@ namespace SignBrowser
                     missings += department + ";";
                 }
             }
-
+            foreach (string department in departmentDates.Keys)
+            {
+                SignGridView.Rows[actRowCount].Cells[SignGridView.Columns[department].Index].Value = Convert.ToDateTime(departmentDates[department], System.Globalization.DateTimeFormatInfo.CurrentInfo);
+            }
             return missings == "";
+        }
+
+        private void checkfolder(string mypath)
+        {
+            authDepartments.Clear();
+            SignGridView.RowCount = 0;
+            SignGridView.ColumnCount = 4;
+            processBar.Value = 0;
+            if (System.IO.File.Exists(mypath + "\\authorities.xml"))
+            {
+                try
+                {
+                    xDoc = new XmlDocument();
+                    xDoc.Load(mypath + "\\authorities.xml");
+                    XmlNodeList departments = xDoc.GetElementsByTagName("department");
+                    foreach (XmlNode thisnode in departments)
+                    {
+                        try
+                        {
+                            string department = thisnode.Attributes.GetNamedItem("name").Value;
+                            SignGridView.Columns.Add(department, department);
+                            try
+                            {
+                                authDepartments[department] = Convert.ToInt32(thisnode.Attributes.GetNamedItem("needed").Value);
+                            }
+                            catch
+                            {
+                                authDepartments[department] = 9999; //makes this department unsignable ;-)
+                            }
+                        }
+                        catch { }
+                    }
+                    StartButton.Enabled = true;
+                    StartButton.Text = "Start";
+                    Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", folderBrowserDialog.SelectedPath);
+
+                }
+                catch
+                {
+                    StartButton.Enabled = false;
+                    StartButton.Text = "Error in authority file ...";
+                }
+            }
+            else
+            {
+                StartButton.Enabled = false;
+                StartButton.Text = "No authority file found...";
+            }
         }
 
         private void FolderDialogButton_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                authDepartments.Clear();
-                SignGridView.RowCount = 0;
-                processBar.Value = 0;
-                if (System.IO.File.Exists(folderBrowserDialog.SelectedPath + "\\authorities.xml"))
-                {
-                    try
-                    {
-                        xDoc = new XmlDocument();
-                        xDoc.Load(folderBrowserDialog.SelectedPath + "\\authorities.xml");
-                        XmlNodeList departments = xDoc.GetElementsByTagName("department");
-                        foreach (XmlNode thisnode in departments)
-                        {
-                            try
-                            {
-                                string department = thisnode.Attributes.GetNamedItem("name").Value;
-                                try
-                                {
-                                    authDepartments[department] = Convert.ToInt32(thisnode.Attributes.GetNamedItem("needed").Value);
-                                }
-                                catch
-                                {
-                                    authDepartments[department] = 9999; //makes this department unsignable ;-)
-                                }
-                            }
-                            catch { }
-                        }
-                        StartButton.Enabled = true;
-                        StartButton.Text = "Start";
-                    }
-                    catch
-                    {
-                        StartButton.Enabled = false;
-                        StartButton.Text = "Error in authority file ...";
-                    }
-                }
-                else
-                {
-                    StartButton.Enabled = false;
-                    StartButton.Text = "No authority file found...";
-                }
+                checkfolder(folderBrowserDialog.SelectedPath);
             }
         }
 
@@ -230,6 +296,13 @@ namespace SignBrowser
             {
                 case 0:
                     string clip = "";
+                    foreach (DataGridViewColumn col in SignGridView.Columns)
+                    {
+                        clip += col.HeaderText + "\t";
+                    }
+
+                    clip += "\r\n";
+                    
                     foreach (DataGridViewRow row in SignGridView.Rows)
                     {
                         foreach (DataGridViewCell cell in row.Cells)

@@ -248,6 +248,7 @@ namespace TheSign
                         // then reply it
                         Outlook.MailItem actMail = (Outlook.MailItem)myExplorer.Selection[1];
                         string key = actMail.Body;
+                        this.Activate();
                         if (key != "")
                         {
 
@@ -264,12 +265,12 @@ namespace TheSign
                             { }
                             if (outputText != "")
                             {
-                                MessageBox.Show("GPG replies oText:\n" + outputText);
+                                MessageBox.Show("GPG replies (oText:)",outputText);
                                 buildTree();
                             }
                             else
                             {
-                                MessageBox.Show("GPG replies eText:\n" + errorText);
+                                MessageBox.Show("GPG replies (eText:)", errorText);
                                 buildTree();
                             }
 
@@ -323,7 +324,7 @@ namespace TheSign
                     gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                     if (errorText != "")
                     {
-                        MessageBox.Show("GPG replies:\n" + errorText);
+                        MessageBox.Show("GPG replies:",errorText);
 
                     }
                     buildTree();
@@ -348,7 +349,7 @@ namespace TheSign
                 gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                 if (errorText != "")
                 {
-                    MessageBox.Show("GPG replies:\n" + errorText);
+                    MessageBox.Show("GPG replies:",errorText);
 
                 }
                 buildTree();

@@ -36,15 +36,15 @@
             this.ExportComboBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.SignGridView = new System.Windows.Forms.DataGridView();
-            this.File = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Signed = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SignedBy = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Signmissing = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.StartButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.processBar = new System.Windows.Forms.ToolStripProgressBar();
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.File = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Signed = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SignedBy = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Signmissing = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -72,7 +72,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.SignGridView);
             this.splitContainer1.Panel2.Controls.Add(this.StartButton);
             this.splitContainer1.Panel2.Controls.Add(this.statusStrip1);
-            this.splitContainer1.Size = new System.Drawing.Size(582, 323);
+            this.splitContainer1.Size = new System.Drawing.Size(887, 323);
             this.splitContainer1.SplitterDistance = 194;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -89,7 +89,7 @@
             // dateTimePicker1
             // 
             this.dateTimePicker1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.dateTimePicker1.Location = new System.Drawing.Point(184, 6);
+            this.dateTimePicker1.Location = new System.Drawing.Point(489, 6);
             this.dateTimePicker1.Name = "dateTimePicker1";
             this.dateTimePicker1.Size = new System.Drawing.Size(200, 20);
             this.dateTimePicker1.TabIndex = 6;
@@ -97,7 +97,7 @@
             // GoButton
             // 
             this.GoButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.GoButton.Location = new System.Drawing.Point(318, 36);
+            this.GoButton.Location = new System.Drawing.Point(623, 36);
             this.GoButton.Name = "GoButton";
             this.GoButton.Size = new System.Drawing.Size(63, 21);
             this.GoButton.TabIndex = 5;
@@ -115,7 +115,7 @@
             "as XML-File"});
             this.ExportComboBox.Location = new System.Drawing.Point(49, 36);
             this.ExportComboBox.Name = "ExportComboBox";
-            this.ExportComboBox.Size = new System.Drawing.Size(263, 21);
+            this.ExportComboBox.Size = new System.Drawing.Size(568, 21);
             this.ExportComboBox.TabIndex = 4;
             // 
             // label1
@@ -143,8 +143,41 @@
             this.SignGridView.Location = new System.Drawing.Point(3, 69);
             this.SignGridView.Name = "SignGridView";
             this.SignGridView.ReadOnly = true;
-            this.SignGridView.Size = new System.Drawing.Size(378, 229);
+            this.SignGridView.Size = new System.Drawing.Size(683, 229);
             this.SignGridView.TabIndex = 2;
+            // 
+            // StartButton
+            // 
+            this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartButton.Enabled = false;
+            this.StartButton.Location = new System.Drawing.Point(3, 6);
+            this.StartButton.Name = "StartButton";
+            this.StartButton.Size = new System.Drawing.Size(480, 20);
+            this.StartButton.TabIndex = 1;
+            this.StartButton.Text = "Check for the date:";
+            this.StartButton.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.StartButton.UseVisualStyleBackColor = true;
+            this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.processBar});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 301);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(689, 22);
+            this.statusStrip1.TabIndex = 0;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // processBar
+            // 
+            this.processBar.Name = "processBar";
+            this.processBar.Size = new System.Drawing.Size(200, 16);
+            // 
+            // folderBrowserDialog
+            // 
+            this.folderBrowserDialog.ShowNewFolderButton = false;
             // 
             // File
             // 
@@ -172,44 +205,11 @@
             this.Signmissing.Name = "Signmissing";
             this.Signmissing.ReadOnly = true;
             // 
-            // StartButton
-            // 
-            this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Enabled = false;
-            this.StartButton.Location = new System.Drawing.Point(3, 6);
-            this.StartButton.Name = "StartButton";
-            this.StartButton.Size = new System.Drawing.Size(175, 20);
-            this.StartButton.TabIndex = 1;
-            this.StartButton.Text = "Check for the date:";
-            this.StartButton.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.StartButton.UseVisualStyleBackColor = true;
-            this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
-            // 
-            // statusStrip1
-            // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.processBar});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 301);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(384, 22);
-            this.statusStrip1.TabIndex = 0;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // processBar
-            // 
-            this.processBar.Name = "processBar";
-            this.processBar.Size = new System.Drawing.Size(200, 16);
-            // 
-            // folderBrowserDialog
-            // 
-            this.folderBrowserDialog.ShowNewFolderButton = false;
-            // 
             // SignBrowser
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(582, 323);
+            this.ClientSize = new System.Drawing.Size(887, 323);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SignBrowser";
@@ -238,11 +238,11 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
         private System.Windows.Forms.Button GoButton;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
+        private System.Windows.Forms.DateTimePicker dateTimePicker1;
         private System.Windows.Forms.DataGridViewTextBoxColumn File;
         private System.Windows.Forms.DataGridViewTextBoxColumn Signed;
         private System.Windows.Forms.DataGridViewTextBoxColumn SignedBy;
         private System.Windows.Forms.DataGridViewTextBoxColumn Signmissing;
-        private System.Windows.Forms.DateTimePicker dateTimePicker1;
     }
 }
 
