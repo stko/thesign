@@ -183,7 +183,7 @@ namespace TheSign
 
         public void sendBugReport(string title, params object[] variables)
         {
-            if (MessageBox.Show("TheSign Error detected", "TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show("TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", "TheSign Error detected", MessageBoxButtons.YesNo) != DialogResult.Yes)
             {
                 return;
             }

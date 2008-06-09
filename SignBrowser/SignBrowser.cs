@@ -22,6 +22,7 @@ namespace SignBrowser
         GnuPGWrapper gpg = new GnuPGWrapper();
         XmlDocument xDoc;
         Hashtable authDepartments = new Hashtable();
+        IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
 
         class signdata
         {
@@ -101,6 +102,7 @@ namespace SignBrowser
                     }
                 }
             }
+            processBar.Value = 0;
             GoButton.Enabled = SignGridView.RowCount > 0;
         }
 
@@ -135,11 +137,12 @@ namespace SignBrowser
                     Match datestring = r.Match(line);
                     try
                     {
-                        lastDate = DateTime.Parse(datestring.Value);
+                        //lastDate = DateTime.ParseExact(datestring.Value, "MM/dd/yy hh:mm:ss", culture, System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                        lastDate = DateTime.Parse(datestring.Value, culture);
                     }
                     catch
                     {
-                        sendBugReport("Auslesen des Datums in den Signatures",line);
+                        sendBugReport("Auslesen des Datums in den Signatures", line, datestring.Value);
                     }
                 }
             }
@@ -148,7 +151,7 @@ namespace SignBrowser
 
         public void sendBugReport(string title, params object[] variables)
         {
-            if (MessageBox.Show("TheSign Error detected", "TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show( "TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?","TheSign Error detected", MessageBoxButtons.YesNo) != DialogResult.Yes)
             {
                 return;
             }
