@@ -23,12 +23,12 @@ namespace TheSign
         KeyForm keywindow;
         AboutBox aboutwindow = new AboutBox();
         string lastcheckedFile = "";
-        
+
 
         public Main()
         {
             InitializeComponent();
-            openFileDialog.InitialDirectory = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign","FileDir",Path.GetDirectoryName(Application.ExecutablePath));
+            openFileDialog.InitialDirectory = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", Path.GetDirectoryName(Application.ExecutablePath));
             Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "ExePath", Path.GetDirectoryName(Application.ExecutablePath));
             gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG";
             gpg.passphrase = "signtest";
@@ -63,7 +63,7 @@ namespace TheSign
         }
         ~Main()
         {
-            Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign","FileDir", openFileDialog.InitialDirectory);
+            Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", openFileDialog.InitialDirectory);
 
         }
 
@@ -165,7 +165,7 @@ namespace TheSign
                     Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
 
                     actMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
-                    actMail.Subject = "File & Sig of  "  +Path.GetFileName(lastcheckedFile)+" [TheSign]";
+                    actMail.Subject = "File & Sig of  " + Path.GetFileName(lastcheckedFile) + " [TheSign]";
                     actMail.HTMLBody = "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>";
                     actMail.Attachments.Add(lastcheckedFile, Type.Missing, Type.Missing, Type.Missing);
                     actMail.Attachments.Add(lastcheckedFile + ".sig", Type.Missing, Type.Missing, Type.Missing);
@@ -187,11 +187,11 @@ namespace TheSign
             {
                 return;
             }
-            string errorlist="Error:\n"+title+"\n\nVariables:\n\n";
-            int i=1;
+            string errorlist = "Error:\n" + title + "\n\nVariables:\n\n";
+            int i = 1;
             foreach (object myobj in variables)
             {
-                errorlist = errorlist+"var_" + i.ToString() + ":" + myobj.ToString() + "\r\n";
+                errorlist = errorlist + "var_" + i.ToString() + ":" + myobj.ToString() + "\r\n";
                 i++;
             }
             try
@@ -287,11 +287,11 @@ namespace TheSign
                             { }
                             if (outputText != "")
                             {
-                                MessageBox.Show("GPG replies (oText):" ,outputText);
+                                MessageBox.Show("GPG replies (oText):", outputText);
                             }
                             else
                             {
-                                MessageBox.Show("GPG replies (eText):" , errorText);
+                                MessageBox.Show("GPG replies (eText):", errorText);
                             }
 
                         }
@@ -368,11 +368,11 @@ namespace TheSign
             {
                 if (isMail)
                 {
-                    fileName = MoveIntoFile(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles\\" + Path.GetFileName(fileName), "", fileName,true,false,false);
+                    fileName = MoveIntoFile(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles\\" + Path.GetFileName(fileName), "", fileName, true, false, false);
                     if (fileName != "")
                     {
                         SignFile(fileName);
-                        ReplyMail(" [TheSign]", "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>",fileName+".sig");
+                        ReplyMail(" [TheSign]", "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>", fileName + ".sig");
                         lastcheckedFile = fileName;
                         toolStripButtonSendFileandSig.Enabled = true;
                         toolStripButtonSendSignaturesOnly.Enabled = true;
@@ -480,7 +480,7 @@ namespace TheSign
                 {
                     // Remove read only first
 
-                    if(File.Exists(fileName))
+                    if (File.Exists(fileName))
                     {
                         File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
                     }
@@ -543,7 +543,7 @@ namespace TheSign
                         ReplyMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
                         ReplyMail.Subject = ReplyMail.Subject + subject;
                         ReplyMail.HTMLBody = body + ReplyMail.HTMLBody;
-//                        ReplyMail.Body = body + ReplyMail.Body;
+                        //                        ReplyMail.Body = body + ReplyMail.Body;
                         ReplyMail.Attachments.Add(attachmentName, Type.Missing, Type.Missing, Type.Missing);
                         ReplyMail.Display(true);
                     }
@@ -668,27 +668,42 @@ namespace TheSign
             if (outputText == "")
             {
                 Output.Text = Output.Text + "Errortext:" + errorText + "Done\r\n";
+                return;
             }
-            else
+            gpg.command = Commands.ShowKey;
+            gpg.armor = true;
+            string keystring;
+            Output.Text = Output.Text + "\r\nExtract own public key:\r\n";
+            gpg.passphrase = "";
+            gpg.ExecuteCommand("", gpg.originator, out keystring, out errorText);
+            if (keystring == "")
             {
-                string tempfile = Path.GetTempPath() + "\\cert.html";
-                StreamWriter fs = new StreamWriter(tempfile);
-                fs.WriteLine("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>TheSign Signature Certification</title></head><body><center>"
-                    + "<h2>GPG Signature Certification</h2>"
-                    + "<p>Hereby I declare that my dignal signature shown below"
-                    + "can be used equally to my normal handwritten signature until redingsbums<p>"
-                    + "<p>Hiermit erkläre ich, das meine unten aufgeführte digitale Signatur"
-                    + "gleichbedeutend meiner normalen handschriftlichen Unterschrift betrachtet werden kann<p>"
-                    + "<tt>"
-                    + outputText.Replace("\n", "<br>")
-                    + "</tt><p><p>Date:_______________________________________________"
-                    + "<p><p>Name_______________________________________________"
-                    + "<p><p>Signature_______________________________________________"
-                    + "</body></html>");
-                fs.Close();
-                System.Diagnostics.Process.Start(tempfile);
-                Output.Text = Output.Text + "\r\nDone\r\n";
+                Output.Text = Output.Text + "Errortext:" + errorText + "Done\r\n";
+                return;
             }
+
+            string tempfile = Path.GetTempPath() + "\\cert.html";
+            StreamWriter fs = new StreamWriter(tempfile);
+            fs.WriteLine("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>TheSign Signature Certification</title></head><body><center>"
+                + "<h2>GPG Signature Certification</h2>"
+                + "<p>Hereby I declare that my dignal signature shown below"
+                + "can be used equally to my normal handwritten signature until redingsbums<p>"
+                + "<p>Hiermit erkläre ich, das meine unten aufgeführte digitale Signatur"
+                + "gleichbedeutend meiner normalen handschriftlichen Unterschrift betrachtet werden kann<p>"
+                + "<tt>"
+                + outputText.Replace("\n", "<br>")
+                + "</tt><p><p>Date:_______________________________________________"
+                + "<p><p>Name_______________________________________________"
+                + "<p><p>Signature_______________________________________________"
+                + "<p><p>In case of data loss, here's the key as paper dump<p>"
+                + "<tt>"
+                + keystring.Replace("\n", "<br>")
+                + "</tt>"
+                + "</body></html>");
+            fs.Close();
+            System.Diagnostics.Process.Start(tempfile);
+            Output.Text = Output.Text + "\r\nDone\r\n";
+
 
         }
 
@@ -798,9 +813,11 @@ namespace TheSign
 
         private void filesSignaturesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            folderBrowserDialog.SelectedPath = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", Path.GetDirectoryName(Application.ExecutablePath));
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                foreach (string sourcefile in Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath)+"\\SignedFiles"))
+                Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", folderBrowserDialog.SelectedPath);
+                foreach (string sourcefile in Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles"))
                 {
                     bool loop = true;
                     while (loop)
@@ -808,7 +825,7 @@ namespace TheSign
                         string filename = "";
                         if (Path.GetExtension(sourcefile) == ".sig")
                         {
-                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false,true);
+                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, true);
                             if (filename != "")
                             {
                                 cleanupSigfile(filename);
@@ -840,10 +857,9 @@ namespace TheSign
                     }
                 }
             endofForEach:
-                sender = sender;
-                
+                { }
+                MessageBox.Show("Data backup successful", "TheSign Data Backup");
             }
-            MessageBox.Show("Data backup successful", "TheSign Data Backup");
         }
     }
 }

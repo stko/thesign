@@ -33,7 +33,6 @@
             this.keyview = new System.Windows.Forms.TreeView();
             this.TrustImagelist = new System.Windows.Forms.ImageList(this.components);
             this.KeyStrip = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSign = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -46,7 +45,7 @@
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripButtonReadMail = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.KeyStrip.SuspendLayout();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
             this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
@@ -87,7 +86,6 @@
             this.KeyStrip.Dock = System.Windows.Forms.DockStyle.None;
             this.KeyStrip.Enabled = false;
             this.KeyStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton1,
             this.toolStripSeparator1,
             this.toolStripSign,
             this.toolStripSeparator2,
@@ -98,22 +96,11 @@
             this.toolStripButtonTrustultimate,
             this.toolStripSeparator4,
             this.toolStripButton2});
-            this.KeyStrip.Location = new System.Drawing.Point(38, 0);
+            this.KeyStrip.Location = new System.Drawing.Point(40, 0);
             this.KeyStrip.Name = "KeyStrip";
-            this.KeyStrip.Size = new System.Drawing.Size(214, 25);
+            this.KeyStrip.Size = new System.Drawing.Size(191, 25);
             this.KeyStrip.TabIndex = 6;
             this.KeyStrip.Text = "toolStrip1";
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton1.Text = "toolStripButton1";
-            this.toolStripButton1.ToolTipText = "Send Key via Email...";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // toolStripSeparator1
             // 
@@ -238,22 +225,22 @@
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButtonReadMail});
+            this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(35, 25);
             this.toolStrip1.TabIndex = 7;
             // 
-            // toolStripButtonReadMail
+            // toolStripButton1
             // 
-            this.toolStripButtonReadMail.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButtonReadMail.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonReadMail.Image")));
-            this.toolStripButtonReadMail.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonReadMail.Name = "toolStripButtonReadMail";
-            this.toolStripButtonReadMail.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButtonReadMail.Text = "toolStripButton3";
-            this.toolStripButtonReadMail.ToolTipText = "Read key from actual selected Email";
-            this.toolStripButtonReadMail.Click += new System.EventHandler(this.toolStripButtonReadMail_Click);
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton1.Text = "toolStripButton1";
+            this.toolStripButton1.ToolTipText = "Send Key via Email...";
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButtonSend_Click);
             // 
             // KeyForm
             // 
@@ -283,7 +270,6 @@
         private System.Windows.Forms.TreeView keyview;
         private System.Windows.Forms.ImageList TrustImagelist;
         private System.Windows.Forms.ToolStrip KeyStrip;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripSign;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -296,6 +282,6 @@
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButtonReadMail;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }

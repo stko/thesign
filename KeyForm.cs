@@ -5,8 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 using Emmanuel.Cryptography.GnuPG;
 using System.Collections;
+using System.Text.RegularExpressions;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace TheSign
@@ -14,6 +16,7 @@ namespace TheSign
     public partial class KeyForm : Form
     {
         private GnuPGWrapper gpg;
+
 
         private PassphraseForm testDialog;
 
@@ -26,10 +29,15 @@ namespace TheSign
                 public DateTime Generated;
                 public string Fingerprint;
                 public string User;
+                public string Username;
+                public string userEmail;
+                public string userComment;
                 public bool valid;
                 public Hashtable signs = new Hashtable();
             }
             public ArrayList Items = new ArrayList();
+            IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
+
             public KeyRingData(bool seckeyring, GnuPGWrapper gpg)
             {
                 string outputText = "";
@@ -64,7 +72,16 @@ namespace TheSign
                             thisKeyringUser = new KeyRingUser();
                             thisKeyringUser.UserId = thisline[4];
                             thisKeyringUser.User = thisline[9];
-                            thisKeyringUser.Generated = DateTime.Parse(thisline[5]);
+                            Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
+                            Match email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userEmail = email.Value;
+                            r = new Regex(@".*(?=(\s*<))", RegexOptions.IgnoreCase);
+                            email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.Username = email.Value;
+                            r = new Regex(@"(?<=\().*(?=\))", RegexOptions.IgnoreCase);
+                            email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userComment = email.Value;
+                            thisKeyringUser.Generated = DateTime.Parse(thisline[5], culture);
                             if (thisline[6] != "")
                             {
                                 thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
@@ -231,76 +248,86 @@ namespace TheSign
             }
         }
 
-        private void ReadKeyFromMail()
+        private void Sendkey2()
         {
-            try
+            KeyMail keyMailWindow = new KeyMail();
+
+            foreach (TreeNode node in keyview.Nodes)
             {
-                // connect to Outlook
-                Outlook._Application outLookApp = new Outlook.Application();
-                // search for the active element
-                Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
-                // is one item selected?
-                if (myExplorer.Selection.Count == 1)
+                if (node.Level == 0)
                 {
-                    //is it a Mail?
-                    if (myExplorer.Selection[1] is Outlook.MailItem)
+                    TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)node.Tag;
+                    keyMailWindow.SendKeyGridView.Rows[keyMailWindow.SendKeyGridView.Rows.Add(false, false, myuser.User)].Tag = node.Tag;
+                }
+            }
+            if (keyMailWindow.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            string emails = "";
+            string keyIDs = "";
+            string users = "";
+            foreach (DataGridViewRow row in keyMailWindow.SendKeyGridView.Rows)
+            {
+                TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)row.Tag;
+                if ((bool)row.Cells[0].Value == true)
+                {
+                    keyIDs += myuser.UserId + " ";
+                    users += myuser.User + "\n";
+                }
+                if ((bool)row.Cells[1].Value == true)
+                {
+                    emails += myuser.userEmail + "; ";
+                }
+            }
+
+            if (keyIDs != "")
+            {
+                string outputText = "";
+                string errorText = "";
+                // a little trick to workaround to make multiple arguments out of a single line again
+                gpg.command = Commands.ShowKey;
+                gpg.armor = true;
+                gpg.passphrase = "";
+                //TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                //                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                gpg.ExecuteCommandMultiple("", keyIDs, out outputText, out errorText, true);
+                if (outputText != "")
+                {
+                    try
                     {
-                        // then reply it
-                        Outlook.MailItem actMail = (Outlook.MailItem)myExplorer.Selection[1];
-                        string key = actMail.Body;
-                        this.Activate();
-                        if (key != "")
-                        {
-
-                            string outputText = "";
-                            string errorText = "";
-                            gpg.command = Commands.AddKey;
-                            gpg.armor = true;
-                            gpg.passphrase = "";
-                            try
-                            {
-                                gpg.ExecuteCommand(key, "", out outputText, out errorText);
-                            }
-                            catch
-                            { }
-                            if (outputText != "")
-                            {
-                                MessageBox.Show("GPG replies (oText:)",outputText);
-                                buildTree();
-                            }
-                            else
-                            {
-                                MessageBox.Show("GPG replies (eText:)", errorText);
-                                buildTree();
-                            }
-
-                        }
-                        else
-                        {
-                            MessageBox.Show("Sorry, no text found in Mail", "TheSign Error");
-
-                        }
-
+                        // connect to Outlook
+                        Outlook._Application outLookApp = new Outlook.Application();
+                        string tempfile = Path.GetTempPath() + "\\theSign.pubkey";
+                        StreamWriter fs = new StreamWriter(tempfile);
+                        fs.WriteLine(outputText);
+                        fs.Close();
+                        Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
+                        actMail.Subject = "TheSign: Some Public Keys of other users";
+                        actMail.Body = "The attached .pubkey file contains the public key(s) of the following users:\n\n";
+                        actMail.Body = actMail.Body + users;
+                        actMail.Body = actMail.Body + "\n\nTo add or update these users in your public key ring, just drag and drop the pubkey attachment into your TheSign Window\n\n";
+//                        actMail.Body = actMail.Body + outputText;
+                        actMail.To = emails;
+                        actMail.Attachments.Add(tempfile, Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Display(true);
+                        Activate();
+                        File.Delete(tempfile);
                     }
-                    else
+                    catch
                     {
-                        MessageBox.Show("Sorry, the Item in Outlook seems no mail..", "TheSign Error");
-
+                        MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
                     }
 
                 }
-                else
-                {
-                    MessageBox.Show("Sorry, there's more as one item selected in Outlook", "TheSign Error");
 
-                }
             }
-            catch
+            else
             {
-                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
+                MessageBox.Show("You need to select at least one \"Key\" to send something :-)", "TheSign Hint");
             }
-
         }
+
 
         private void SignKey()
         {
@@ -311,7 +338,7 @@ namespace TheSign
                     return;
                 }
                 TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
-                if (testDialog.ShowDialog("Confirm signature from "+myuser.User) == DialogResult.OK)
+                if (testDialog.ShowDialog("Confirm signature from " + myuser.User) == DialogResult.OK)
                 {
                     gpg.passphrase = testDialog.passPhraseText.Text;
                     if (!testDialog.storePassPhrase.Checked)
@@ -324,7 +351,7 @@ namespace TheSign
                     gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                     if (errorText != "")
                     {
-                        MessageBox.Show("GPG replies:",errorText);
+                        MessageBox.Show("GPG replies:", errorText);
 
                     }
                     buildTree();
@@ -349,7 +376,7 @@ namespace TheSign
                 gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                 if (errorText != "")
                 {
-                    MessageBox.Show("GPG replies:",errorText);
+                    MessageBox.Show("GPG replies:", errorText);
 
                 }
                 buildTree();
@@ -382,9 +409,9 @@ namespace TheSign
             }
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
+        private void toolStripButtonSend_Click(object sender, EventArgs e)
         {
-            Sendkey();
+            Sendkey2();
         }
 
         private void toolStripSign_Click(object sender, EventArgs e)
@@ -396,12 +423,6 @@ namespace TheSign
         {
             DeleteKey();
         }
-
-        private void toolStripButtonReadMail_Click(object sender, EventArgs e)
-        {
-            ReadKeyFromMail();
-        }
-
 
     }
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><?mso-infoPathSolution solutionVersion="1.0.0.1" productVersion="11.0.8034" PIVersion="1.0.0.0" name="urn:schemas-microsoft-com:office:infopath:thesignauthorities:" href="file:///P:\thesign\SignedFiles\thesignauthorities.xsn" ?><?mso-application progid="InfoPath.Document"?><thesignauthoritylist xmlns:my="http://schemas.microsoft.com/office/infopath/2003/myXSD/2008-04-27T14:23:02" xml:lang="en-us">
+	<department name="SY_E" needed="1">
+		<authoritee>
+			<email>steffen.koehler@systech-eu.com</email>
+			<duration mandatory="">
+				<from></from>
+				<to></to>
+			</duration>
+		</authoritee>
+	<authoritee>
+									<email>horst.grasztat@systech-eu.com</email>
+									<duration mandatory="">
+										<from></from>
+										<to></to>
+									</duration>
+								</authoritee></department>
+<department name="SY_ME" needed="1">
+									<authoritee>
+										<email>sven.herrmann@systech-eu.com</email>
+										<duration mandatory="">
+											<from></from>
+											<to></to>
+										</duration>
+									</authoritee>
+								</department></thesignauthoritylist>
