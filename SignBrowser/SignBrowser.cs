@@ -26,7 +26,9 @@ namespace SignBrowser
 
         class signdata
         {
-            public string email;
+            public string email,
+            Username,
+                userComment;
             public DateTime date;
         }
 
@@ -77,7 +79,7 @@ namespace SignBrowser
                         string signature = "";
                         foreach (signdata thissign in signs)
                         {
-                            signature += thissign.email + ";";
+                            signature += thissign.Username + "; ";
                         }
                         SignGridView.Rows[SignGridView.RowCount - 1].Cells[2].Value = signature;
                         if (signature != "")
@@ -120,16 +122,44 @@ namespace SignBrowser
                         Match email = r.Match(line);
                         signdata thissign = new signdata();
 
-                        if (lastDate!=DateTime.FromBinary(0))
+                        if (lastDate != DateTime.FromBinary(0))
                         {
-                            thissign.email=email.Value;
+                            thissign.email = email.Value;
+                            if (thissign.email == "")
+                            {
+                                thissign.email = "unknownUser";
+                                thissign.Username = "unknownUser";
+                            }
+                            else
+                            {
+                                r = new Regex(@"(?<="").*(?=\s*\()", RegexOptions.IgnoreCase);
+                                email = r.Match(line);
+                                thissign.Username = email.Value;
+                                r = new Regex(@"(?<=\().*(?=\))", RegexOptions.IgnoreCase);
+                                email = r.Match(line);
+                                thissign.userComment = email.Value;
+                            }
                             thissign.date = lastDate;
+
                             signs.Add(thissign);
                             lastDate = DateTime.FromBinary(0);
                         }
                     }
 
                 }
+                if (line.ToLower().Contains("public key not found")) //unknown Key
+                {
+                    signdata thissign = new signdata();
+                    thissign.email = "unknownUser";
+                    thissign.Username = "unknownUser";
+                    thissign.date = lastDate;
+
+                    signs.Add(thissign);
+                    lastDate = DateTime.FromBinary(0);
+
+                }
+
+
                 // gpg: Signature made 02/14/08 08:45:40 
                 if (line.ToLower().Contains("gpg: signature made"))
                 {
@@ -151,7 +181,7 @@ namespace SignBrowser
 
         public void sendBugReport(string title, params object[] variables)
         {
-            if (MessageBox.Show( "TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?","TheSign Error detected", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show("TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", "TheSign Error detected", MessageBoxButtons.YesNo) != DialogResult.Yes)
             {
                 return;
             }
@@ -181,7 +211,7 @@ namespace SignBrowser
 
         }
 
-        private bool checkAuthorities(ref string missings, signdata[] signatures ,int actRowCount)
+        private bool checkAuthorities(ref string missings, signdata[] signatures, int actRowCount)
         {
             Hashtable foundDepartments = new Hashtable();
             Hashtable departmentDates = new Hashtable();
@@ -207,9 +237,9 @@ namespace SignBrowser
                             }
                             try
                             {
-                                if ((DateTime) departmentDates[department]>thisemail.date)
+                                if ((DateTime)departmentDates[department] > thisemail.date)
                                 {
-                                    departmentDates[department]=thisemail.date;
+                                    departmentDates[department] = thisemail.date;
                                 }
                             }
                             catch
@@ -226,7 +256,7 @@ namespace SignBrowser
             {
                 if (Convert.ToInt32(authDepartments[department]) > Convert.ToInt32(foundDepartments[department]))
                 {
-                    missings += department + ";";
+                    missings += department + " ; ";
                 }
             }
             foreach (string department in departmentDates.Keys)
@@ -305,7 +335,7 @@ namespace SignBrowser
                     }
 
                     clip += "\r\n";
-                    
+
                     foreach (DataGridViewRow row in SignGridView.Rows)
                     {
                         foreach (DataGridViewCell cell in row.Cells)

@@ -213,6 +213,7 @@ namespace TheSign
         private void KeyForm_Shown(object sender, EventArgs e)
         {
             buildTree();
+
         }
 
         private void Sendkey()
@@ -348,12 +349,14 @@ namespace TheSign
                     string errorText = "";
                     gpg.command = Commands.SignKey;
                     gpg.armor = true;
+                    gpg.batch = true; //GPG asks for confirmation in stdin if not in batch mode
                     gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                     if (errorText != "")
                     {
-                        MessageBox.Show("GPG replies:", errorText);
+                        MessageBox.Show(errorText, "GPG replies:");
 
                     }
+                    //gpg.batch = true;
                     buildTree();
                 }
             }
@@ -376,7 +379,7 @@ namespace TheSign
                 gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                 if (errorText != "")
                 {
-                    MessageBox.Show("GPG replies:", errorText);
+                    MessageBox.Show( errorText,"GPG replies:");
 
                 }
                 buildTree();

@@ -97,6 +97,7 @@
             this.Name = "PassphraseForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Please enter your PassPhrase";
+            this.Activated += new System.EventHandler(this.PassphraseForm_Activated);
             this.ResumeLayout(false);
             this.PerformLayout();
 

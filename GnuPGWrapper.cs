@@ -630,7 +630,6 @@ namespace Emmanuel.Cryptography.GnuPG
 
             // Check results and prepare output
             _exitcode = _processObject.ExitCode;
-            errorText = _errorString;
             if (_exitcode == 0)
             {
                 outputText = _outputString;
@@ -641,8 +640,9 @@ namespace Emmanuel.Cryptography.GnuPG
                 {
                     _errorString = "GPGNET: [" + _processObject.ExitCode.ToString() + "]: Unknown error";
                 }
-                throw new GnuPGException(_errorString);
+                //throw new GnuPGException(_errorString);
             }
+            errorText = _errorString;
         }
 
         /// <summary>

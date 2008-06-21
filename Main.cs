@@ -287,11 +287,11 @@ namespace TheSign
                             { }
                             if (outputText != "")
                             {
-                                MessageBox.Show("GPG replies (oText):", outputText);
+                                MessageBox.Show(outputText, "GPG replies (oText):");
                             }
                             else
                             {
-                                MessageBox.Show("GPG replies (eText):", errorText);
+                                MessageBox.Show(errorText, "GPG replies (eText):");
                             }
 
                         }

@@ -22,5 +22,10 @@ namespace TheSign
             return base.ShowDialog();
             
         }
+
+        private void PassphraseForm_Activated(object sender, EventArgs e)
+        {
+            passPhraseText.Focus();
+        }
     }
 }
