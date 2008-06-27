@@ -545,7 +545,6 @@ namespace Emmanuel.Cryptography.GnuPG
                     gpgOptions += " " + inputText;
                 }
             }
-
             string gpgExecutable = _bindirectory + "\\gpg.exe";
 
             // TODO check existence of _bindirectory and gpgExecutable

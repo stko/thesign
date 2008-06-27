@@ -6,7 +6,9 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using Emmanuel.Cryptography.GnuPG;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Xml;
 using System.IO;
 using Outlook = Microsoft.Office.Interop.Outlook;
 using System.Collections;
@@ -20,9 +22,118 @@ namespace TheSign
 
         GnuPGWrapper gpg = new GnuPGWrapper();
         PassphraseForm testDialog = new PassphraseForm();
-        KeyForm keywindow;
+//        KeyForm keywindow;
         AboutBox aboutwindow = new AboutBox();
         string lastcheckedFile = "";
+        public class KeyRingData
+        {
+            public class KeyRingUser
+            {
+                public string UserId;
+                public DateTime Expires;
+                public DateTime Generated;
+                public string Fingerprint;
+                public string User;
+                public string Username;
+                public string userEmail;
+                public string userComment;
+                public bool valid;
+                public Hashtable signs = new Hashtable();
+            }
+            public ArrayList Items = new ArrayList();
+            IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
+
+            public KeyRingData(bool seckeyring, GnuPGWrapper gpg)
+            {
+                string outputText = "";
+                string errorText = "";
+                if (seckeyring)
+                {
+                    gpg.command = Commands.Seckey;
+                    gpg.armor = true;
+                    gpg.passphrase = "";
+                    gpg.ExecuteCommand("", "", out outputText, out errorText);
+                }
+                else
+                {
+                    gpg.command = Commands.List;
+                    gpg.armor = true;
+                    gpg.passphrase = "";
+                    gpg.ExecuteCommand("", "", out outputText, out errorText);
+                }
+                KeyRingUser thisKeyringUser = null;
+                foreach (string line in (outputText.Split('\n')))
+                {
+                    string[] thisline = line.Split(':');
+                    try
+                    {
+                        if (thisline[0] == "sec" || thisline[0] == "pub")
+                        {
+                            if (thisKeyringUser != null)
+                            {
+                                Items.Add(thisKeyringUser);
+                            }
+
+                            thisKeyringUser = new KeyRingUser();
+                            thisKeyringUser.UserId = thisline[4];
+                            thisKeyringUser.User = thisline[9];
+                            Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
+                            Match email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userEmail = email.Value;
+                            r = new Regex(@".*(?=(\s*<))", RegexOptions.IgnoreCase);
+                            email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.Username = email.Value;
+                            r = new Regex(@"(?<=\().*(?=\))", RegexOptions.IgnoreCase);
+                            email = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userComment = email.Value;
+                            thisKeyringUser.Generated = DateTime.Parse(thisline[5], culture);
+                            if (thisline[6] != "")
+                            {
+                                thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
+                                thisKeyringUser.valid = (thisKeyringUser.Expires.Ticks == 0 || thisKeyringUser.Expires.Ticks > DateTime.Now.Ticks);
+                            }
+                            else
+                            {
+                                thisKeyringUser.valid = true;
+                            }
+                        }
+                        if (thisline[0] == "fpr")
+                        {
+                            thisKeyringUser.Fingerprint = thisline[9];
+                        }
+                        if (thisline[0] == "sig")
+                        {
+                            if (thisKeyringUser != null)
+                            {
+                                thisKeyringUser.signs[thisline[4]] = thisline[9];
+                            }
+                        }
+                    }
+                    catch
+                    { }
+                }
+                if (thisKeyringUser != null)
+                {
+                    Items.Add(thisKeyringUser);
+                }
+
+
+            }
+        }
+
+        private Hashtable keys = new Hashtable();
+        XmlDocument xDoc;
+        Hashtable authDepartments = new Hashtable();
+        IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
+
+        class signdata
+        {
+            public string email,
+            Username,
+                userComment;
+            public DateTime date;
+        }
+
 
 
         public Main()
@@ -32,14 +143,17 @@ namespace TheSign
             Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "ExePath", Path.GetDirectoryName(Application.ExecutablePath));
             gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG";
             gpg.passphrase = "signtest";
-            keywindow = new KeyForm(gpg, testDialog);
-            KeyForm.KeyRingData privateKey = new KeyForm.KeyRingData(true, gpg);
+            //keywindow = new KeyForm(gpg, testDialog);
+            LoadDB();
+            buildTree();
+ 
+            KeyRingData privateKey = new KeyRingData(true, gpg);
             int i = 0;
             bool endflag = false;
-            KeyForm.KeyRingData.KeyRingUser thisitem = null;
+            KeyRingData.KeyRingUser thisitem = null;
             while (i < privateKey.Items.Count && !endflag)
             {
-                thisitem = (KeyForm.KeyRingData.KeyRingUser)privateKey.Items[i];
+                thisitem = (KeyRingData.KeyRingUser)privateKey.Items[i];
                 if (thisitem.valid)
                 {
                     endflag = true;
@@ -60,6 +174,11 @@ namespace TheSign
             }
 
             // Set some parameters from on Web.Config file
+
+            folderBrowserDialog.SelectedPath = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", Path.GetDirectoryName(Application.ExecutablePath));
+            checkfolder(folderBrowserDialog.SelectedPath);
+            ExportComboBox.SelectedIndex = 0;
+
         }
         ~Main()
         {
@@ -157,6 +276,10 @@ namespace TheSign
         {
             if (lastcheckedFile != "")
             {
+                if (Path.GetExtension(lastcheckedFile).ToLower() == ".sig")
+                {
+                    lastcheckedFile = Path.GetDirectoryName(lastcheckedFile) +"\\"+ Path.GetFileNameWithoutExtension(lastcheckedFile);
+                }
                 try
                 {
                     // connect to Outllok
@@ -167,9 +290,16 @@ namespace TheSign
                     actMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
                     actMail.Subject = "File & Sig of  " + Path.GetFileName(lastcheckedFile) + " [TheSign]";
                     actMail.HTMLBody = "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>";
-                    actMail.Attachments.Add(lastcheckedFile, Type.Missing, Type.Missing, Type.Missing);
-                    actMail.Attachments.Add(lastcheckedFile + ".sig", Type.Missing, Type.Missing, Type.Missing);
-                    actMail.Display(true);
+                    try
+                    {
+                        actMail.Attachments.Add(lastcheckedFile, Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Attachments.Add(lastcheckedFile + ".sig", Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Display(true);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Error: Can't attach file\n"+lastcheckedFile, "TheSign Error");
+                    }
 
 
                 }
@@ -645,10 +775,6 @@ namespace TheSign
             Application.Exit();
         }
 
-        private void Menu_listKeys(object sender, EventArgs e)
-        {
-            keywindow.ShowDialog();
-        }
 
         private void clearWindow()
         {
@@ -685,17 +811,16 @@ namespace TheSign
             string tempfile = Path.GetTempPath() + "\\cert.html";
             StreamWriter fs = new StreamWriter(tempfile);
             fs.WriteLine("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>TheSign Signature Certification</title></head><body><center>"
-                + "<h2>GPG Signature Certification</h2>"
-                + "<p>Hereby I declare that my dignal signature shown below"
-                + "can be used equally to my normal handwritten signature until redingsbums<p>"
-                + "<p>Hiermit erkläre ich, das meine unten aufgeführte digitale Signatur"
-                + "gleichbedeutend meiner normalen handschriftlichen Unterschrift betrachtet werden kann<p>"
+                + "<h2>OpenPGP (GPG) Signature Certification</h2>"
+                + "<p>I herewith agree that my digital signature given and identified using OpenPGP (via TheSign/GPG) shall be valid and binding to the same extent as my handwrittten signature under any document.<p>"
+                + "<p>Hiermit erkl&auml;re ich, dass meine digitale Unterschrift, die unter Verwendung von OpenPGP (mittels TheSign/GPG) abgegeben und identifiziert wird, in gleicher Weise g&uuml;ltig und bindend sein soll wie meine handschriftliche Unterschrift unter einem Dokument.<p>"
                 + "<tt>"
                 + outputText.Replace("\n", "<br>")
                 + "</tt><p><p>Date:_______________________________________________"
                 + "<p><p>Name_______________________________________________"
                 + "<p><p>Signature_______________________________________________"
                 + "<p><p>In case of data loss, here's the key as paper dump<p>"
+                + "<p><p>F&uuml;r den Fall des Datenverlustes hier der Schl&uuml;ssel als Papier- Hardcopy<p>"
                 + "<tt>"
                 + keystring.Replace("\n", "<br>")
                 + "</tt>"
@@ -861,5 +986,585 @@ namespace TheSign
                 MessageBox.Show("Data backup successful", "TheSign Data Backup");
             }
         }
+
+        private bool LoadDB()
+        {
+            string outputText = "";
+            string errorText = "";
+            gpg.command = Commands.loadTrust;
+            gpg.armor = true;
+            gpg.passphrase = "";
+
+            int i = 0;
+            gpg.ExecuteCommand("", "", out outputText, out errorText);
+            foreach (string line in (outputText.Split('\n')))
+            {
+                if (i > 1) // skip the first 2 lines
+                {
+                    string[] thisline = line.Trim().Split(':');
+                    try
+                    {
+                        keys[thisline[0]] = Convert.ToInt32(thisline[1], 10);
+                    }
+                    catch
+                    { }
+                }
+                i++;
+            }
+            return keys.Count > 0;
+        }
+
+        private bool SaveDB()
+        {
+            if (keys.Count > 0)
+            {
+                string outputText = "";
+                string errorText = "";
+                string keytext = "";
+                foreach (string key in keys.Keys)
+                {
+                    keytext += key + ":" + keys[key].ToString() + "\n";
+                }
+                gpg.command = Commands.writeTrust;
+                gpg.armor = true;
+                gpg.passphrase = "";
+                gpg.ExecuteCommand(keytext, "", out outputText, out errorText);
+
+            }
+            return true;
+        }
+
+        private int getTrustLevel(string fingerprint)
+        {
+            int trustlevel = 0;
+            try
+            {
+                trustlevel = (int)keys[fingerprint] - 2;
+            }
+            catch
+            {
+            }
+            return trustlevel;
+        }
+
+        private void buildTree()
+        {
+            LoadDB();
+//            KeyRingData publicKey = new KeyForm.KeyRingData(false, gpg);
+            KeyRingData publicKey = new KeyRingData(false, gpg);
+            keyview.Nodes.Clear();
+            foreach (KeyRingData.KeyRingUser user in publicKey.Items)
+            {
+                TreeNode thisnode = keyview.Nodes.Add(user.User);
+                thisnode.Tag = user;
+                thisnode.ImageIndex = getTrustLevel(user.Fingerprint);
+                thisnode.SelectedImageIndex = thisnode.ImageIndex;
+                thisnode.ToolTipText = "fingerprint:" + user.Fingerprint;
+                foreach (string sig in user.signs.Keys)
+                {
+                    //                    TreeNode signode = thisnode.Nodes.Add(user.signs[sig].ToString, sig);
+                    TreeNode signode = thisnode.Nodes.Add(user.signs[sig].ToString());
+                    signode.ImageIndex = 5;
+                    signode.SelectedImageIndex = 5;
+                    signode.Tag = sig;
+                }
+            }
+        }
+
+
+        private void Sendkey()
+        {
+            if (keyview.SelectedNode != null)
+            {
+                string outputText = "";
+                string errorText = "";
+                gpg.command = Commands.ShowKey;
+                gpg.armor = true;
+                gpg.passphrase = "";
+                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                if (outputText != "")
+                {
+                    try
+                    {
+                        // connect to Outllok
+                        Outlook._Application outLookApp = new Outlook.Application();
+
+                        Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
+                        actMail.Subject = "TheSign: Public Key of " + keyview.SelectedNode.Text;
+                        actMail.Body = outputText;
+                        actMail.Display(true);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
+                    }
+
+                }
+
+            }
+        }
+
+        private void Sendkey2()
+        {
+            KeyMail keyMailWindow = new KeyMail();
+
+            foreach (TreeNode node in keyview.Nodes)
+            {
+                if (node.Level == 0)
+                {
+                    KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)node.Tag;
+                    keyMailWindow.SendKeyGridView.Rows[keyMailWindow.SendKeyGridView.Rows.Add(false, false, myuser.User)].Tag = node.Tag;
+                }
+            }
+            if (keyMailWindow.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            string emails = "";
+            string keyIDs = "";
+            string users = "";
+            foreach (DataGridViewRow row in keyMailWindow.SendKeyGridView.Rows)
+            {
+                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)row.Tag;
+                if ((bool)row.Cells[0].Value == true)
+                {
+                    keyIDs += myuser.UserId + " ";
+                    users += myuser.User + "\n";
+                }
+                if ((bool)row.Cells[1].Value == true)
+                {
+                    emails += myuser.userEmail + "; ";
+                }
+            }
+
+            if (keyIDs != "")
+            {
+                string outputText = "";
+                string errorText = "";
+                // a little trick to workaround to make multiple arguments out of a single line again
+                gpg.command = Commands.ShowKey;
+                gpg.armor = true;
+                gpg.passphrase = "";
+                //TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                //                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                gpg.ExecuteCommandMultiple("", keyIDs, out outputText, out errorText, true);
+                if (outputText != "")
+                {
+                    try
+                    {
+                        // connect to Outlook
+                        Outlook._Application outLookApp = new Outlook.Application();
+                        string tempfile = Path.GetTempPath() + "\\theSign.pubkey";
+                        StreamWriter fs = new StreamWriter(tempfile);
+                        fs.WriteLine(outputText);
+                        fs.Close();
+                        Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
+                        actMail.Subject = "TheSign: Some Public Keys of other users";
+                        actMail.Body = "The attached .pubkey file contains the public key(s) of the following users:\n\n";
+                        actMail.Body = actMail.Body + users;
+                        actMail.Body = actMail.Body + "\n\nTo add or update these users in your public key ring, just drag and drop the pubkey attachment into your TheSign Window\n\n";
+                        //                        actMail.Body = actMail.Body + outputText;
+                        actMail.To = emails;
+                        actMail.Attachments.Add(tempfile, Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Display(true);
+                        Activate();
+                        File.Delete(tempfile);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
+                    }
+
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("You need to select at least one \"Key\" to send something :-)", "TheSign Hint");
+            }
+        }
+
+        private void SignKey()
+        {
+            if (keyview.SelectedNode != null)
+            {
+                if (MessageBox.Show("You must not sign a key without being 100% sure\nthat the key belongs to the right person!\n\nDid you checked the Fingerprint against the\nhand signed Certificate & verified the\ncertificate with the assumed owner\ne.g. via phone?\n", "Security Warning!", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+                {
+                    return;
+                }
+                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                if (testDialog.ShowDialog("Confirm signature from " + myuser.User) == DialogResult.OK)
+                {
+                    gpg.passphrase = testDialog.passPhraseText.Text;
+                    if (!testDialog.storePassPhrase.Checked)
+                    {
+                        testDialog.passPhraseText.Text = "";
+                    } string outputText = "";
+                    string errorText = "";
+                    gpg.command = Commands.SignKey;
+                    gpg.armor = true;
+                    gpg.batch = true; //GPG asks for confirmation in stdin if not in batch mode
+                    gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                    if (errorText != "")
+                    {
+                        MessageBox.Show(errorText, "GPG replies:");
+
+                    }
+                    //gpg.batch = true;
+                    buildTree();
+                }
+            }
+
+        }
+
+        private void DeleteKey()
+        {
+            if (keyview.SelectedNode != null)
+            {
+                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                if (MessageBox.Show("Do you really want to delete\n\n" + myuser.User + "\n\nfrom your Keylist?\nThis Deletion can't be reversed!", "Security Warning!", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) != DialogResult.OK)
+                {
+                    return;
+                }
+                string outputText = "";
+                string errorText = "";
+                gpg.command = Commands.DelKey;
+                gpg.armor = true;
+                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
+                if (errorText != "")
+                {
+                    MessageBox.Show(errorText, "GPG replies:");
+
+                }
+                buildTree();
+            }
+
+        }
+
+        private void keyview_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if (keyview.SelectedNode == null || keyview.SelectedNode.Parent != null)
+            {
+                KeyStrip.Enabled = false;
+            }
+            else
+            {
+                KeyStrip.Enabled = true;
+            }
+        }
+
+        private void toolStripButton_SetTrustlevel_Click(object sender, EventArgs e)
+        {
+            if (sender is ToolStripItem)
+            {
+                ToolStripItem mybutton = (ToolStripItem)sender;
+                int newtrustlevel = Convert.ToInt32(mybutton.Tag);
+                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
+                keys[myuser.Fingerprint] = newtrustlevel + 1;
+                SaveDB();
+                buildTree();
+            }
+        }
+
+        private void toolStripButtonSend_Click(object sender, EventArgs e)
+        {
+            Sendkey2();
+        }
+
+        private void toolStripSign_Click(object sender, EventArgs e)
+        {
+            SignKey();
+        }
+
+        private void toolStripDelete_Click(object sender, EventArgs e)
+        {
+            DeleteKey();
+        }
+
+        private void StartButton_Click(object sender, EventArgs e)
+        {
+            SignGridView.Rows.Clear();
+            string[] directorylist = Directory.GetFiles(folderBrowserDialog.SelectedPath);
+            processBar.Maximum = directorylist.Length;
+            processBar.Minimum = 0;
+            processBar.Value = 0;
+            foreach (string fileName in directorylist)
+            {
+                processBar.Value++;
+                if (Path.GetExtension(fileName).ToLower() != ".sig")
+                {
+                    SignGridView.Rows.Add();
+                    SignGridView.Rows[SignGridView.RowCount - 1].Cells[0].Value = Path.GetFileName(fileName);
+                    if (System.IO.File.Exists(fileName + ".sig"))
+                    {
+                        signdata[] signs = new signdata[0];
+                        string outputText = "";
+                        string errorText = "";
+                        gpg.command = Commands.Verify;
+                        gpg.armor = true;
+                        gpg.batch = false; //Somehow the --batch flag makes GPG to not return all signs, just some...
+                        gpg.passphrase = "";
+                        try
+                        {
+                            gpg.ExecuteCommand("", fileName + ".sig", out outputText, out errorText);
+                        }
+                        catch
+                        {
+                        }
+                        signs = EvaluateResult(errorText);
+                        gpg.batch = true;
+                        string signature = "";
+                        foreach (signdata thissign in signs)
+                        {
+                            signature += thissign.Username + "; ";
+                        }
+                        SignGridView.Rows[SignGridView.RowCount - 1].Cells[2].Value = signature;
+                        if (signature != "")
+                        {
+                            string missdepartments = "";
+                            if (checkAuthorities(ref missdepartments, signs, SignGridView.RowCount - 1))
+                            {
+                                SignGridView.Rows[SignGridView.RowCount - 1].Cells[1].Value = "Yes";
+                            }
+                            else
+                            {
+                                SignGridView.Rows[SignGridView.RowCount - 1].Cells[1].Value = "-";
+                            }
+                            SignGridView.Rows[SignGridView.RowCount - 1].Cells[3].Value = missdepartments;
+                        }
+                    }
+                    else
+                    {
+                        SignGridView.Rows[SignGridView.RowCount - 1].Cells[1].Value = "-";
+                        SignGridView.Rows[SignGridView.RowCount - 1].Cells[3].Value = "No signature file";
+
+                    }
+                }
+            }
+            processBar.Value = 0;
+            GoButton.Enabled = SignGridView.RowCount > 0;
+        }
+
+        private signdata[] EvaluateResult(string text)
+        {
+            ArrayList signs = new ArrayList();
+            DateTime lastDate = DateTime.FromBinary(0);
+            foreach (string line in text.Split('\n'))
+            {
+                if (line.ToLower().Contains("signature"))
+                {
+                    if (line.ToLower().Contains("good"))
+                    {
+                        Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
+                        Match email = r.Match(line);
+                        signdata thissign = new signdata();
+
+                        if (lastDate != DateTime.FromBinary(0))
+                        {
+                            thissign.email = email.Value;
+                            if (thissign.email == "")
+                            {
+                                thissign.email = "unknownUser";
+                                thissign.Username = "unknownUser";
+                            }
+                            else
+                            {
+                                r = new Regex(@"(?<="").*(?=\s*\()", RegexOptions.IgnoreCase);
+                                email = r.Match(line);
+                                thissign.Username = email.Value;
+                                r = new Regex(@"(?<=\().*(?=\))", RegexOptions.IgnoreCase);
+                                email = r.Match(line);
+                                thissign.userComment = email.Value;
+                            }
+                            thissign.date = lastDate;
+
+                            signs.Add(thissign);
+                            lastDate = DateTime.FromBinary(0);
+                        }
+                    }
+
+                }
+                if (line.ToLower().Contains("public key not found")) //unknown Key
+                {
+                    signdata thissign = new signdata();
+                    thissign.email = "unknownUser";
+                    thissign.Username = "unknownUser";
+                    thissign.date = lastDate;
+
+                    signs.Add(thissign);
+                    lastDate = DateTime.FromBinary(0);
+
+                }
+
+
+                // gpg: Signature made 02/14/08 08:45:40 
+                if (line.ToLower().Contains("gpg: signature made"))
+                {
+                    Regex r = new Regex(@"\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}", RegexOptions.IgnoreCase);
+                    Match datestring = r.Match(line);
+                    try
+                    {
+                        //lastDate = DateTime.ParseExact(datestring.Value, "MM/dd/yy hh:mm:ss", culture, System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                        lastDate = DateTime.Parse(datestring.Value, culture);
+                    }
+                    catch
+                    {
+                        sendBugReport("Auslesen des Datums in den Signatures", line, datestring.Value);
+                    }
+                }
+            }
+            return (signdata[])signs.ToArray(typeof(signdata));
+        }
+
+        private bool checkAuthorities(ref string missings, signdata[] signatures, int actRowCount)
+        {
+            Hashtable foundDepartments = new Hashtable();
+            Hashtable departmentDates = new Hashtable();
+            missings = "";
+            foreach (signdata thisemail in signatures)
+            {
+                XmlNodeList emails = xDoc.GetElementsByTagName("email");
+                foreach (XmlNode thisnode in emails)
+                {
+                    try
+                    {
+                        if (thisnode.InnerText == thisemail.email)
+                        {
+                            XmlNode parentnode = thisnode.ParentNode.ParentNode; //move up to the department node
+                            string department = parentnode.Attributes.GetNamedItem("name").Value; //getting the Name of the department
+                            try
+                            {
+                                foundDepartments[department] = Convert.ToInt32(foundDepartments[department]) + 1;
+                            }
+                            catch
+                            {
+                                foundDepartments[department] = 1; ; //that's the first entry
+                            }
+                            try
+                            {
+                                if ((DateTime)departmentDates[department] > thisemail.date)
+                                {
+                                    departmentDates[department] = thisemail.date;
+                                }
+                            }
+                            catch
+                            {
+                                departmentDates[department] = thisemail.date;//that's the first entry
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+            //Evaluating the result
+            foreach (string department in authDepartments.Keys)
+            {
+                if (Convert.ToInt32(authDepartments[department]) > Convert.ToInt32(foundDepartments[department]))
+                {
+                    missings += department + " ; ";
+                }
+            }
+            foreach (string department in departmentDates.Keys)
+            {
+                SignGridView.Rows[actRowCount].Cells[SignGridView.Columns[department].Index].Value = Convert.ToDateTime(departmentDates[department], System.Globalization.DateTimeFormatInfo.CurrentInfo);
+            }
+            return missings == "";
+        }
+
+        private void checkfolder(string mypath)
+        {
+            authDepartments.Clear();
+            SignGridView.RowCount = 0;
+            SignGridView.ColumnCount = 4;
+            processBar.Value = 0;
+            if (System.IO.File.Exists(mypath + "\\authorities.xml"))
+            {
+                try
+                {
+                    xDoc = new XmlDocument();
+                    xDoc.Load(mypath + "\\authorities.xml");
+                    XmlNodeList departments = xDoc.GetElementsByTagName("department");
+                    foreach (XmlNode thisnode in departments)
+                    {
+                        try
+                        {
+                            string department = thisnode.Attributes.GetNamedItem("name").Value;
+                            SignGridView.Columns.Add(department, department);
+                            try
+                            {
+                                authDepartments[department] = Convert.ToInt32(thisnode.Attributes.GetNamedItem("needed").Value);
+                            }
+                            catch
+                            {
+                                authDepartments[department] = 9999; //makes this department unsignable ;-)
+                            }
+                        }
+                        catch { }
+                    }
+                    StartButton.Enabled = true;
+                    StartButton.Text = "Start";
+                    Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", folderBrowserDialog.SelectedPath);
+
+                }
+                catch
+                {
+                    StartButton.Enabled = false;
+                    StartButton.Text = "Error in authority file ...";
+                }
+            }
+            else
+            {
+                StartButton.Enabled = false;
+                StartButton.Text = "No authority file found...";
+            }
+        }
+
+        private void FolderDialogButton_Click(object sender, EventArgs e)
+        {
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            {
+                checkfolder(folderBrowserDialog.SelectedPath);
+            }
+        }
+
+        private void GoButton_Click(object sender, EventArgs e)
+        {
+
+            switch (ExportComboBox.SelectedIndex)
+            {
+                case 0:
+                    string clip = "";
+                    foreach (DataGridViewColumn col in SignGridView.Columns)
+                    {
+                        clip += col.HeaderText + "\t";
+                    }
+
+                    clip += "\r\n";
+
+                    foreach (DataGridViewRow row in SignGridView.Rows)
+                    {
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            if (cell.Value != null)
+                            {
+                                clip += cell.Value.ToString() + "\t";
+                            }
+                            else
+                            {
+                                clip += "\t";
+                            }
+                        }
+                        clip += "\r\n";
+                    }
+                    Clipboard.SetText(clip);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+
     }
 }
