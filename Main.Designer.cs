@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.theSignToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,6 +84,7 @@
             this.StartButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.processBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.TreeViewImageList = new System.Windows.Forms.ImageList(this.components);
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -360,9 +362,12 @@
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.keyview.HideSelection = false;
+            this.keyview.ImageIndex = 0;
+            this.keyview.ImageList = this.TreeViewImageList;
             this.keyview.ItemHeight = 18;
             this.keyview.Location = new System.Drawing.Point(0, 3);
             this.keyview.Name = "keyview";
+            this.keyview.SelectedImageIndex = 0;
             this.keyview.ShowNodeToolTips = true;
             this.keyview.Size = new System.Drawing.Size(828, 323);
             this.keyview.TabIndex = 5;
@@ -408,7 +413,7 @@
             this.toolStripButton2});
             this.KeyStrip.Location = new System.Drawing.Point(38, 0);
             this.KeyStrip.Name = "KeyStrip";
-            this.KeyStrip.Size = new System.Drawing.Size(222, 25);
+            this.KeyStrip.Size = new System.Drawing.Size(191, 25);
             this.KeyStrip.TabIndex = 6;
             this.KeyStrip.Text = "toolStrip1";
             // 
@@ -669,6 +674,17 @@
             this.processBar.Name = "processBar";
             this.processBar.Size = new System.Drawing.Size(200, 16);
             // 
+            // TreeViewImageList
+            // 
+            this.TreeViewImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("TreeViewImageList.ImageStream")));
+            this.TreeViewImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.TreeViewImageList.Images.SetKeyName(0, "trust_dont_know.png");
+            this.TreeViewImageList.Images.SetKeyName(1, "trust_no_trust.png");
+            this.TreeViewImageList.Images.SetKeyName(2, "trust_marginally.png");
+            this.TreeViewImageList.Images.SetKeyName(3, "trust_fully.png");
+            this.TreeViewImageList.Images.SetKeyName(4, "trust_ultimatelly.png");
+            this.TreeViewImageList.Images.SetKeyName(5, "sign.png");
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -772,6 +788,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Signed;
         private System.Windows.Forms.DataGridViewTextBoxColumn SignedBy;
         private System.Windows.Forms.DataGridViewTextBoxColumn Signmissing;
+        private System.Windows.Forms.ImageList TreeViewImageList;
     }
 }
 

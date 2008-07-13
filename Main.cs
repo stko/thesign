@@ -17,16 +17,27 @@ using Microsoft.Win32;
 
 namespace TheSign
 {
+
     public partial class Main : Form
     {
 
+        //the object to wrap the GPG access
         GnuPGWrapper gpg = new GnuPGWrapper();
+        // the window to input the PassPhrase
         PassphraseForm testDialog = new PassphraseForm();
-//        KeyForm keywindow;
+        // the About Window
         AboutBox aboutwindow = new AboutBox();
+        // the last checked file
         string lastcheckedFile = "";
+
+        /// <summary>
+        /// the class with stores the public key datas
+        /// </summary>
         public class KeyRingData
         {
+            /// <summary>
+            /// The class which stores the data about one public key entry
+            /// </summary>
             public class KeyRingUser
             {
                 public string UserId;
@@ -40,9 +51,15 @@ namespace TheSign
                 public bool valid;
                 public Hashtable signs = new Hashtable();
             }
-            public ArrayList Items = new ArrayList();
+            // List of all key contained in that keyring
+            public ArrayList keyEntries = new ArrayList();
+            // Culture to provide the american date format used by the GPG output
             IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
-
+            /// <summary>
+            /// Constructor which reads the keyring from the given GPG object
+            /// </summary>
+            /// <param name="seckeyring">read the public (false) or the secret (true) keyring</param>
+            /// <param name="gpg">the GPGwrapper object</param>
             public KeyRingData(bool seckeyring, GnuPGWrapper gpg)
             {
                 string outputText = "";
@@ -62,31 +79,41 @@ namespace TheSign
                     gpg.ExecuteCommand("", "", out outputText, out errorText);
                 }
                 KeyRingUser thisKeyringUser = null;
+                // splits the GPG output in it's lines
                 foreach (string line in (outputText.Split('\n')))
                 {
+                    // and split the line into its values
                     string[] thisline = line.Split(':');
                     try
                     {
+                        //is it a key description?
                         if (thisline[0] == "sec" || thisline[0] == "pub")
                         {
+                            // did we just filled an entry in the previous loop?
+                            // then save the old entry first
                             if (thisKeyringUser != null)
                             {
-                                Items.Add(thisKeyringUser);
+                                keyEntries.Add(thisKeyringUser);
                             }
 
                             thisKeyringUser = new KeyRingUser();
                             thisKeyringUser.UserId = thisline[4];
                             thisKeyringUser.User = thisline[9];
+                            // filter the users email address out of the user data
                             Regex r = new Regex(@"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}", RegexOptions.IgnoreCase);
-                            Match email = r.Match(thisKeyringUser.User);
-                            thisKeyringUser.userEmail = email.Value;
+                            Match regExMatch = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userEmail = regExMatch.Value;
+                            // filter the users name out of the user data
                             r = new Regex(@".*(?=(\s*<))", RegexOptions.IgnoreCase);
-                            email = r.Match(thisKeyringUser.User);
-                            thisKeyringUser.Username = email.Value;
+                            regExMatch = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.Username = regExMatch.Value;
+                            // filter the users comment out of the user data
                             r = new Regex(@"(?<=\().*(?=\))", RegexOptions.IgnoreCase);
-                            email = r.Match(thisKeyringUser.User);
-                            thisKeyringUser.userComment = email.Value;
+                            regExMatch = r.Match(thisKeyringUser.User);
+                            thisKeyringUser.userComment = regExMatch.Value;
+                            // get the key generation date
                             thisKeyringUser.Generated = DateTime.Parse(thisline[5], culture);
+                            // is the key expired?
                             if (thisline[6] != "")
                             {
                                 thisKeyringUser.Expires = DateTime.Parse(thisline[6]);
@@ -97,10 +124,12 @@ namespace TheSign
                                 thisKeyringUser.valid = true;
                             }
                         }
+                        // store the keys fingerprint
                         if (thisline[0] == "fpr")
                         {
                             thisKeyringUser.Fingerprint = thisline[9];
                         }
+                        // the the signatures for that key
                         if (thisline[0] == "sig")
                         {
                             if (thisKeyringUser != null)
@@ -114,46 +143,50 @@ namespace TheSign
                 }
                 if (thisKeyringUser != null)
                 {
-                    Items.Add(thisKeyringUser);
+                    keyEntries.Add(thisKeyringUser);
                 }
 
 
             }
         }
 
-        private Hashtable keys = new Hashtable();
+        private Hashtable trustLevels = new Hashtable();
         XmlDocument xDoc;
         Hashtable authDepartments = new Hashtable();
         IFormatProvider culture = new System.Globalization.CultureInfo("en-US", false);
 
+        /// <summary>
+        /// collected the details of a file signature
+        /// </summary>
         class signdata
         {
             public string email,
             Username,
-                userComment;
+            userComment;
             public DateTime date;
         }
-
-
 
         public Main()
         {
             InitializeComponent();
-            openFileDialog.InitialDirectory = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", Path.GetDirectoryName(Application.ExecutablePath));
-            Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "ExePath", Path.GetDirectoryName(Application.ExecutablePath));
-            gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG";
+            // load last used directory where to store files
+            openFileDialog.InitialDirectory = (string)Registry.GetValue(tsConst.RegKey, tsConst.RegFileDir, Path.GetDirectoryName(Application.ExecutablePath));
+            // saves the path of this TheSign instance as info for the update installer
+            Registry.SetValue(tsConst.RegKey, tsConst.RegExePath, Path.GetDirectoryName(Application.ExecutablePath));
+            gpg.homedirectory = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir;
             gpg.passphrase = "signtest";
-            //keywindow = new KeyForm(gpg, testDialog);
-            LoadDB();
+            // creates the keylist
             buildTree();
- 
+            // loads the secret key list to determine the actual name of the theSign user
             KeyRingData privateKey = new KeyRingData(true, gpg);
             int i = 0;
             bool endflag = false;
             KeyRingData.KeyRingUser thisitem = null;
-            while (i < privateKey.Items.Count && !endflag)
+            // running through the list of known secret keys
+            while (i < privateKey.keyEntries.Count && !endflag)
             {
-                thisitem = (KeyRingData.KeyRingUser)privateKey.Items[i];
+                thisitem = (KeyRingData.KeyRingUser)privateKey.keyEntries[i];
+                // looking for the first valid entry
                 if (thisitem.valid)
                 {
                     endflag = true;
@@ -165,36 +198,50 @@ namespace TheSign
             }
             if (endflag)
             {
+                // valid secret key found
+                // set originator in the GPGP object
                 gpg.originator = thisitem.UserId;
+                // and set the window title
                 Text = thisitem.User + " | " + Text + " | " + build.version + "  " + build.buildver;
             }
             else
             {
+                Text = "Installation incomplete" + " | " + Text + " | " + build.version + "  " + build.buildver;
                 MessageBox.Show("No valid Userid found - Installation incomplete?");
             }
-
-            // Set some parameters from on Web.Config file
-
-            folderBrowserDialog.SelectedPath = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", Path.GetDirectoryName(Application.ExecutablePath));
-            checkfolder(folderBrowserDialog.SelectedPath);
+            // load last browsed folder from the registry
+            folderBrowserDialog.SelectedPath = (string)Registry.GetValue(tsConst.RegKey, tsConst.RegBrowseDir, Path.GetDirectoryName(Application.ExecutablePath));
+            // check if Browsefolder contains a authority file
+            checkForAuthorityFile(folderBrowserDialog.SelectedPath);
+            // preselect the browse list output format
             ExportComboBox.SelectedIndex = 0;
 
         }
+
+        /// <summary>
+        /// Destructor writes the last used file folder into registry
+        /// </summary>
         ~Main()
         {
-            Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", openFileDialog.InitialDirectory);
+            Registry.SetValue(tsConst.RegKey, tsConst.RegFileDir, openFileDialog.InitialDirectory);
 
         }
 
+        /// <summary>
+        /// Handles dropped files or dropped email attachments
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Output_DragDrop(object sender, DragEventArgs e)
         {
 
             string[] fileNames = null;
 
-
+            // bring own window to front
             this.Activate();
             try
             {
+                // Is it a normal file from the local filesystem dropped into the window?
                 if (e.Data.GetDataPresent(DataFormats.FileDrop, false) == true)
                 {
                     clearWindow();
@@ -205,6 +252,7 @@ namespace TheSign
                         HandleFile(fileName, false);
                     }
                 }
+                    // or is it a dropped email- attachment?
                 else if (e.Data.GetDataPresent("FileGroupDescriptor"))
                 {
                     clearWindow();
@@ -223,9 +271,10 @@ namespace TheSign
                     for (int i = 76; fileGroupDescriptor[i] != 0; i++)
                     { fileName.Append(Convert.ToChar(fileGroupDescriptor[i])); }
                     theStream.Close();
-                    string path = Path.GetTempPath();  // put the zip file into the temp directory
-                    //                        string path = Path.GetDirectoryName(Application.ExecutablePath)+"\\SignedFiles\\";  // put the zip file into the temp directory
-                    string theFile = path + fileName.ToString();  // create the full-path name
+                    // put thefile into the temp directory
+                    string path = Path.GetTempPath();
+                    // create the full-path name
+                    string theFile = path + fileName.ToString();
 
                     //
                     // Second step:  we have the file name.  Now we need to get the actual raw
@@ -242,11 +291,8 @@ namespace TheSign
                     // create a file and save the raw zip file to it
                     FileStream fs = new FileStream(theFile, FileMode.Create);
                     fs.Write(fileBytes, 0, (int)fileBytes.Length);
-
                     fs.Close();	// close the file
-
                     FileInfo tempFile = new FileInfo(theFile);
-
                     // always good to make sure we actually created the file
                     if (tempFile.Exists == true)
                     {
@@ -258,7 +304,6 @@ namespace TheSign
                     }
                     else
                     {
-                        //Trace.WriteLine("File was not created!"); 
                         Output.Text = Output.Text + "\r\nError: " + "File was not created!";
                     }
                 }
@@ -266,51 +311,52 @@ namespace TheSign
             catch (Exception ex)
             {
                 Output.Text = Output.Text + "\r\nError: " + ex.Message;
-                //Trace.WriteLine("Error in DragDrop function: " + ex.Message);
-
                 // don't use MessageBox here - Outlook or Explorer is waiting !
             }
         }
 
+
+        /// <summary>
+        /// Puts the last checked file and signature into an email
+        /// </summary>
         private void SendFileandSig()
         {
+            // did we already checked a file?
             if (lastcheckedFile != "")
             {
-                if (Path.GetExtension(lastcheckedFile).ToLower() == ".sig")
+                // was it a signature?
+                if (Path.GetExtension(lastcheckedFile).ToLower() == tsConst.sigExt)
                 {
-                    lastcheckedFile = Path.GetDirectoryName(lastcheckedFile) +"\\"+ Path.GetFileNameWithoutExtension(lastcheckedFile);
+                    // remove the signature extension
+                    lastcheckedFile = Path.GetDirectoryName(lastcheckedFile) + "\\" + Path.GetFileNameWithoutExtension(lastcheckedFile);
                 }
-                try
+                //and put file and signature in an email
+                Outlook.MailItem actMail = MakeNewMail();
+                if (actMail != null)
                 {
-                    // connect to Outllok
-                    Outlook._Application outLookApp = new Outlook.Application();
-
-                    Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
-
                     actMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
                     actMail.Subject = "File & Sig of  " + Path.GetFileName(lastcheckedFile) + " [TheSign]";
                     actMail.HTMLBody = "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>";
                     try
                     {
                         actMail.Attachments.Add(lastcheckedFile, Type.Missing, Type.Missing, Type.Missing);
-                        actMail.Attachments.Add(lastcheckedFile + ".sig", Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Attachments.Add(lastcheckedFile + tsConst.sigExt, Type.Missing, Type.Missing, Type.Missing);
                         actMail.Display(true);
                     }
                     catch
                     {
-                        MessageBox.Show("Error: Can't attach file\n"+lastcheckedFile, "TheSign Error");
+                        MessageBox.Show("Error: Can't attach file\n" + lastcheckedFile, "TheSign Error");
                     }
-
-
                 }
-                catch
-                {
-                    MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-                }
-
             }
         }
 
+        /// <summary>
+        /// For better debugging, puts an error discription and a set of preselected 
+        /// variables into an email to the program author
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="variables"></param>
         public void sendBugReport(string title, params object[] variables)
         {
             if (MessageBox.Show("TheSign just discovered an error\nIs it ok to send a error report to steffen@koehlers.de?", "TheSign Error detected", MessageBoxButtons.YesNo) != DialogResult.Yes)
@@ -321,28 +367,25 @@ namespace TheSign
             int i = 1;
             foreach (object myobj in variables)
             {
-                errorlist = errorlist + "var_" + i.ToString() + ":" + myobj.ToString() + "\r\n";
+                errorlist = errorlist + "var " + i.ToString() + ":" + myobj.ToString() + "\r\n";
                 i++;
             }
-            try
+            Outlook.MailItem actMail = MakeNewMail();
+            if (actMail != null)
             {
-                // connect to Outllok
-                Outlook._Application outLookApp = new Outlook.Application();
-
-                Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
-                actMail.To = "steffen@koehlers.de";
+                actMail.To = tsConst.progAuthor;
                 actMail.Subject = "TheSign Error Report";
                 actMail.Body = errorlist;
                 actMail.Display(true);
 
             }
-            catch
-            {
-                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-            }
-
         }
 
+        /// <summary>
+        /// Signs and sends the last checked file text output
+        /// this odd function is used when somebody needs to be informed about
+        /// a signature, but if he's not allowed to see the signed document itself
+        /// </summary>
         private void SendSignaturesOnly()
         {
             string text = Output.Text;
@@ -351,7 +394,7 @@ namespace TheSign
 
                 string outputText = "";
                 string errorText = "";
-                if (testDialog.ShowDialog("Sign last output text") == DialogResult.OK)
+                if (testDialog.ShowDialog("Sign last output text?") == DialogResult.OK)
                 {
                     gpg.passphrase = testDialog.passPhraseText.Text;
                     if (!testDialog.storePassPhrase.Checked)
@@ -363,131 +406,118 @@ namespace TheSign
                     gpg.ExecuteCommand(text, "", out outputText, out errorText);
                     if (outputText != "")
                     {
-                        try
+                        Outlook.MailItem actMail = MakeNewMail();
+                        if (actMail != null)
                         {
-                            // connect to Outllok
-                            Outlook._Application outLookApp = new Outlook.Application();
-
-                            Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
                             actMail.Subject = "TheSign: Confirmation of Signatures";
                             actMail.Body = "This is a mail generated by the TheSign (http://www.koehlers.de/wiki/doku.php?id=thesign:index)\n\nHere's the confirmation that " + Path.GetFileName(lastcheckedFile) + " is signed as follows\n" + outputText;
                             actMail.Display(true);
 
                         }
-                        catch
-                        {
-                            MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-                        }
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// if a signed text is received via Email, this function checks if the text
+        /// signature is valid
+        /// </summary>
         private void checkEmailValidity()
         {
-            try
+            // get body text from actual selected email
+            Outlook.MailItem actMail = GetActiveMail();
+            if (actMail != null)
             {
-                // connect to Outlook
-                Outlook._Application outLookApp = new Outlook.Application();
-                // search for the active element
-                Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
-                // is one item selected?
-                if (myExplorer.Selection.Count == 1)
+                string InlineSignature = actMail.Body;
+                this.Activate();
+                if (InlineSignature != "")
                 {
-                    //is it a Mail?
-                    if (myExplorer.Selection[1] is Outlook.MailItem)
+
+                    string outputText = "";
+                    string errorText = "";
+                    gpg.command = Commands.Verify;
+                    gpg.armor = true;
+                    gpg.passphrase = "";
+                    try
                     {
-                        // then reply it
-                        Outlook.MailItem actMail = (Outlook.MailItem)myExplorer.Selection[1];
-                        string InlineSignature = actMail.Body;
-                        this.Activate();
-                        if (InlineSignature != "")
-                        {
-
-                            string outputText = "";
-                            string errorText = "";
-                            gpg.command = Commands.Verify;
-                            gpg.armor = true;
-                            gpg.passphrase = "";
-                            try
-                            {
-                                gpg.ExecuteCommand(InlineSignature, "", out outputText, out errorText);
-                            }
-                            catch
-                            { }
-                            if (outputText != "")
-                            {
-                                MessageBox.Show(outputText, "GPG replies (oText):");
-                            }
-                            else
-                            {
-                                MessageBox.Show(errorText, "GPG replies (eText):");
-                            }
-
-                        }
-                        else
-                        {
-                            MessageBox.Show("Sorry, no text found in Mail", "TheSign Error");
-
-                        }
-
+                        gpg.ExecuteCommand(InlineSignature, "", out outputText, out errorText);
+                    }
+                    catch
+                    { }
+                    if (outputText != "")
+                    {
+                        MessageBox.Show(outputText, "GPG replies (oText):");
                     }
                     else
                     {
-                        MessageBox.Show("Sorry, the Item in Outlook seems no mail..", "TheSign Error");
-
+                        MessageBox.Show(errorText, "GPG replies (eText):");
                     }
 
                 }
                 else
                 {
-                    MessageBox.Show("Sorry, there's more as one item selected in Outlook", "TheSign Error");
+                    MessageBox.Show("Sorry, no text found in Mail", "TheSign Error");
 
                 }
             }
-            catch
-            {
-                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-            }
+
         }
 
+        /// <summary>
+        /// this functions does the global handling of all incoming file requests
+        /// and decides based on the file extension and the isMail flag
+        /// how to handle that file
+        /// </summary>
+        /// <param name="fileName">the complete path for the file</param>
+        /// <param name="isMail">true is file is dropped from an email</param>
         private void HandleFile(string fileName, Boolean isMail)
         {
-            // do what you are going to do with each filename
-            if (Path.GetExtension(fileName) == ".sig")
+            // is it a signature?
+            if (Path.GetExtension(fileName).ToLower() == tsConst.sigExt)
             {
                 if (isMail)
                 {
+                    // if the signature comes from an email, locate the original 
+                    // document first
                     openFileDialog.Title = "Select original file to add the sign to:";
                     openFileDialog.FileName = Path.GetFullPath(openFileDialog.InitialDirectory) + "\\" + Path.GetFileName((Path.GetFileNameWithoutExtension(fileName)));
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         openFileDialog.InitialDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-                        Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", openFileDialog.InitialDirectory);
+                        // save the actual folder in the registry for the next time..
+                        Registry.SetValue(tsConst.RegKey, tsConst.RegFileDir, openFileDialog.InitialDirectory);
                         string targetFileName = openFileDialog.FileName;
-                        while (Path.GetExtension(targetFileName).ToLower() == ".sig")
+                        // remove the signature extension
+                        while (Path.GetExtension(targetFileName).ToLower() == tsConst.sigExt)
                         {
                             targetFileName = Path.GetFileNameWithoutExtension(targetFileName);
                         }
                         lastcheckedFile = targetFileName;
-                        targetFileName = MoveIntoFile(targetFileName, ".sig", fileName, true, true, true);
+                        // append the signature to an exisiting signature files
+                        targetFileName = MoveIntoFile(targetFileName, tsConst.sigExt, fileName, true, true, true);
                         Output.Text += "\r\nSignature saved";
+                        // remove duplicates in the signature file
                         cleanupSigfile(targetFileName);
+                        // and show the actual signatures
                         CheckSig(targetFileName, false);
+                        // and finally switch some buttons on
                         toolStripButtonSendFileandSig.Enabled = true;
                         toolStripButtonSendSignaturesOnly.Enabled = true;
                     }
                 }
                 else
                 {
+                    // if signature is a normal file, just check it
                     CheckSig(fileName, true);
                     lastcheckedFile = fileName;
                     toolStripButtonSendFileandSig.Enabled = true;
                     toolStripButtonSendSignaturesOnly.Enabled = true;
                 }
             }
-            else if (Path.GetExtension(fileName) == ".pubkey")
+            else if (Path.GetExtension(fileName).ToLower() == tsConst.pubKeyExt )
             {
+                // import the key file
                 importKey(fileName);
                 lastcheckedFile = "";
                 toolStripButtonSendFileandSig.Enabled = false;
@@ -498,11 +528,14 @@ namespace TheSign
             {
                 if (isMail)
                 {
+                    // save the file first
                     fileName = MoveIntoFile(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles\\" + Path.GetFileName(fileName), "", fileName, true, false, false);
                     if (fileName != "")
                     {
+                        // Sign it
                         SignFile(fileName);
-                        ReplyMail(" [TheSign]", "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>", fileName + ".sig");
+                        // and send the signature back
+                        ReplyMail(" [TheSign]", "<html><body><p><i>Please add a few friendly words to the receipient here :-)</i></p><span style=\"font-size:0.6em\">(made by <a href=\"http://www.koehlers.de/wiki/doku.php?id=thesign:index\">TheSign</a>)</span>", fileName + tsConst.sigExt);
                         lastcheckedFile = fileName;
                         toolStripButtonSendFileandSig.Enabled = true;
                         toolStripButtonSendSignaturesOnly.Enabled = true;
@@ -511,6 +544,7 @@ namespace TheSign
                 }
                 else
                 {
+                    // just sign it
                     SignFile(fileName);
                     lastcheckedFile = fileName;
                     toolStripButtonSendFileandSig.Enabled = true;
@@ -519,12 +553,19 @@ namespace TheSign
                 }
                 if (fileName != "")
                 {
+                    // and remember the directory
                     openFileDialog.InitialDirectory = Path.GetDirectoryName(fileName);
-                    Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "FileDir", openFileDialog.InitialDirectory);
+                    Registry.SetValue(tsConst.RegKey, tsConst.RegFileDir, openFileDialog.InitialDirectory);
                 }
             }
         }
 
+        /// <summary>
+        /// compares two files if equal or not
+        /// </summary>
+        /// <param name="file1"></param>
+        /// <param name="file2"></param>
+        /// <returns>true if equal</returns>
         private bool FileCompare(string file1, string file2)
         {
             int file1byte;
@@ -577,6 +618,17 @@ namespace TheSign
             return ((file1byte - file2byte) == 0);
         }
 
+        /// <summary>
+        /// Overwrites or appends another file or text string to a file
+        /// </summary>
+        /// <param name="fileName">the output file</param>
+        /// <param name="ext">if given, ext is added to filename as extension</param>
+        /// <param name="input">text string or filename as input</param>
+        /// <param name="isFile">if true, input is handled as filename</param>
+        /// <param name="Append">if true, input will append to the output file, 
+        /// otherways the output file will be overwritten</param>
+        /// <param name="overwrite">if true, overwrite output without confirmation window</param>
+        /// <returns></returns>
         private string MoveIntoFile(string fileName, string ext, string input, bool isFile, bool Append, bool overwrite)
         {
             fileName += ext;
@@ -593,6 +645,7 @@ namespace TheSign
                     }
 
                 }
+                // open the input
                 int bytesread;
                 byte[] buffer = new byte[1024];
                 Stream inputStream;
@@ -609,12 +662,11 @@ namespace TheSign
                 try
                 {
                     // Remove read only first
-
                     if (File.Exists(fileName))
                     {
                         File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
                     }
-
+                    // open the output for append or rewrite
                     if (Append)
                     {
                         fs = File.Open(fileName, FileMode.Append, FileAccess.Write);
@@ -629,19 +681,23 @@ namespace TheSign
                     inputStream.Close();
                     return "";
                 }
+                // copy input to output
                 while ((bytesread = inputStream.Read(buffer, 0, 1024)) > 0)
                 {
                     fs.Write(buffer, 0, bytesread);
                 }
                 inputStream.Close();
                 fs.Close();
+                // and set the file to readonly again
                 File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
 
             }
             else
             {
+                // in case a text string should be written to the output file
                 if (File.Exists(fileName))
                 {
+                    // Remove read only first
                     File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
                 }
                 StreamWriter fs = new StreamWriter(fileName, Append);
@@ -652,40 +708,41 @@ namespace TheSign
             return fileName;
         }
 
+        /// <summary>
+        /// replies to actual Outlook Mail by quoting the old body text and the subject
+        /// </summary>
+        /// <param name="subject">the mail Subject</param>
+        /// <param name="body">the Mail body</param>
+        /// <param name="attachmentName">the attachment to add</param>
+        /// <returns></returns>
         private int ReplyMail(String subject, String body, String attachmentName)
         {
-            try
+            Outlook.MailItem ReplyMail = MakeReplyMail();
+            if (ReplyMail != null)
             {
-                // connect to Outllok
-                Outlook._Application outLookApp = new Outlook.Application();
-                //http://tangiblesoftwaresolutions.com/Articles/CSharp%20Equivalent%20to%20VB%20CreateObject.htm
-                // search for the active element
-                Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
-                // is one item selected?
-                if (myExplorer.Selection.Count == 1)
+                try
                 {
-                    //is it a Mail?
-                    if (myExplorer.Selection[1] is Outlook.MailItem)
+                    ReplyMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
+                    ReplyMail.Subject = ReplyMail.Subject + subject;
+                    ReplyMail.HTMLBody = body + ReplyMail.HTMLBody;
+                    if (attachmentName != "")
                     {
-                        // then reply it
-                        Outlook.MailItem actMail = (Outlook.MailItem)myExplorer.Selection[1];
-                        Outlook.MailItem ReplyMail = actMail.Reply();
-                        ReplyMail.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
-                        ReplyMail.Subject = ReplyMail.Subject + subject;
-                        ReplyMail.HTMLBody = body + ReplyMail.HTMLBody;
-                        //                        ReplyMail.Body = body + ReplyMail.Body;
                         ReplyMail.Attachments.Add(attachmentName, Type.Missing, Type.Missing, Type.Missing);
-                        ReplyMail.Display(true);
                     }
+                    ReplyMail.Display(true);
                 }
-            }
-            catch
-            {
-                return 1;
+                catch
+                {
+                    return 1;
+                }
             }
             return 0;
         }
 
+        /// <summary>
+        /// Import public keys from a file
+        /// </summary>
+        /// <param name="fileName"></param>
         private void importKey(String fileName)
         {
             clearWindow();
@@ -697,8 +754,14 @@ namespace TheSign
             gpg.passphrase = "";
             gpg.ExecuteCommand("", fileName, out outputText, out errorText);
             Output.Text = Output.Text + Path.GetFileName(fileName) + " Imported:\r\n" + errorText;
+            buildTree();
         }
 
+        /// <summary>
+        /// checks the signatures of a file
+        /// </summary>
+        /// <param name="fileName">the file to check</param>
+        /// <param name="clearfirst">clear output window first if true</param>
         private void CheckSig(String fileName, bool clearfirst)
         {
             if (clearfirst)
@@ -712,17 +775,15 @@ namespace TheSign
             gpg.batch = false; //Somehow the --batch flag makes GPG to not return all signs, just some...
             Output.Text = Output.Text + "\r\nChecking " + Path.GetFileName(fileName) + " ...";
             gpg.passphrase = "";
-            try
-            {
-                gpg.ExecuteCommand("", fileName, out outputText, out errorText);
-            }
-            catch
-            {
-            }
+            gpg.ExecuteCommand("", fileName, out outputText, out errorText);
             gpg.batch = true;
             Output.Text = Output.Text + Path.GetFileName(fileName) + " checked:\r\n" + errorText;
         }
 
+        /// <summary>
+        /// signs a file
+        /// </summary>
+        /// <param name="fileName">the file to sign</param>
         private void SignFile(String fileName)
         {
             clearWindow();
@@ -741,11 +802,11 @@ namespace TheSign
                 gpg.ExecuteCommand("", fileName, out outputText, out errorText);
                 if (errorText == "")
                 {
-                    MoveIntoFile(fileName, ".sig", outputText, false, true, false);
+                    //Attach output signature text to signature file
+                    MoveIntoFile(fileName, tsConst.sigExt, outputText, false, true, false);
                     File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
-
                     Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed\r\n";
-                    CheckSig(fileName + ".sig", false);
+                    CheckSig(fileName + tsConst.sigExt, false);
                 }
 
             }
@@ -756,6 +817,12 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Handles the incoming DragEnter- Events, if a file or a email
+        /// attachment is dropped into the program window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Output_DragEnter(object sender, DragEventArgs e)
         {
             // for this program, we allow a file to be dropped from Explorer
@@ -770,17 +837,30 @@ namespace TheSign
 
         }
 
+        /// <summary>
+        /// Quits the program
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Menu_Quit(object sender, EventArgs e)
         {
             Application.Exit();
         }
 
-
+        /// <summary>
+        /// Cleans up the window outputs to handle a new input file
+        /// </summary>
         private void clearWindow()
         {
             Output.Text = "";
         }
 
+        /// <summary>
+        /// Generates a html output of the users fingerprint and present it
+        /// in a Browser window for printing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Menu_printCertificate(object sender, EventArgs e)
         {
             clearWindow();
@@ -832,26 +912,44 @@ namespace TheSign
 
         }
 
+        /// <summary>
+        /// Load a given URL in a Browser window
+        /// </summary>
+        /// <param name="targetURL">the URL to show</param>
         private void launchURL(string targetURL)
         {
             System.Diagnostics.Process.Start(targetURL);
         }
 
+        /// <summary>
+        /// Load the online manual in a browser window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void onlineManualToolStripMenuItem_Click(object sender, EventArgs e)
         {
             launchURL("http://www.koehlers.de/wiki/doku.php?id=thesign:index");
         }
 
+        /// <summary>
+        /// removes duplicate entries out of a signature file
+        /// </summary>
+        /// <param name="fileName">the signature file to clean up</param>
         private void cleanupSigfile(string fileName)
         {
+            // little Trick: using a hash table to eleminate duplicates
+            // by using the signature as key, so double signatures will
+            // end up as a single hash
             Hashtable keys = new Hashtable();
             bool insidesign = false;
             string thisline;
             string totalsign = "";
             StreamReader fs = new StreamReader(fileName);
+            // read through the file line by line
             while (!fs.EndOfStream)
             {
                 thisline = fs.ReadLine();
+                // concat all lines of a signature into one single string
                 if (thisline == "-----BEGIN PGP SIGNATURE-----")
                 {
                     totalsign = thisline;
@@ -863,6 +961,8 @@ namespace TheSign
                     {
                         insidesign = false;
                         totalsign += "\r\n" + thisline;
+                        //and finally using the signature string as key for a hash,
+                        // filled with a dummy value
                         keys[totalsign] = 1;
                     }
 
@@ -875,55 +975,92 @@ namespace TheSign
                     }
                 }
             }
+            // close the read input
             fs.Close();
+            // remove the write protection
             if (File.Exists(fileName))
             {
                 File.SetAttributes(fileName, File.GetAttributes(fileName) & ~FileAttributes.ReadOnly);
             }
             StreamWriter fsout = new StreamWriter(fileName);
-
+            // and write the keys of the previously generated hashtable (=the signatures)
+            // back into the file
             foreach (string line in keys.Keys)
             {
                 fsout.WriteLine(line);
             }
             fsout.Close();
+            // finally set the write protection again
             File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
 
         }
 
+        /// <summary>
+        /// loads the TheSign Bugtracker in a browser window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void bugtrackerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             launchURL("http://www.koehlers.de/flyspray/index.php?project=3&switch=1&do=index");
         }
 
+        /// <summary>
+        /// Opens the About- Window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             aboutwindow.ShowDialog();
         }
 
+        /// <summary>
+        /// put the last checked file and its signatures into an email to sent
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButtonSendFileandSig_Click(object sender, EventArgs e)
         {
             SendFileandSig();
         }
 
+        /// <summary>
+        /// signs the gpg output of the last checked file and put it in an email to
+        /// send as confirmation that a particular file has been signed
+        /// (needed if the recipient needs the confirmation about a file signature,
+        /// but is not permitted to see the file itself)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButtonSendSignaturesOnly_Click(object sender, EventArgs e)
         {
             SendSignaturesOnly();
         }
 
+        /// <summary>
+        /// Checks the signature in an received email text
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButtoncheckEmailVality_Click(object sender, EventArgs e)
         {
             checkEmailValidity();
         }
 
+        /// <summary>
+        /// Creates a backup of the public and secret key rings
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void keyDataToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                string filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\pubring.gpg", "", Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG\\pubring.gpg", true, false, true);
+                string filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\"+tsConst.pubKeyFile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\"+tsConst.gpgDir+"\\"+tsConst.pubKeyFile, true, false, true);
                 if (filename != "")
                 {
-                    filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\secring.gpg", "", Path.GetDirectoryName(Application.ExecutablePath) + "\\GnuPG\\secring.gpg", true, false, true);
+                    filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\"+tsConst.secKeyFile , "", Path.GetDirectoryName(Application.ExecutablePath) + "\\"+tsConst.gpgDir+"\\"+tsConst.secKeyFile , true, false, true);
                 }
                 if (filename != "")
                 {
@@ -936,19 +1073,27 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Creates Backups of the locally existing files and signatures into a
+        /// selectable folder.
+        /// While doing that, files are checked for equally and signature files are merged
+        /// together
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void filesSignaturesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog.SelectedPath = (string)Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", Path.GetDirectoryName(Application.ExecutablePath));
+            folderBrowserDialog.SelectedPath = (string)Registry.GetValue(tsConst.RegKey, tsConst.RegBrowseDir, Path.GetDirectoryName(Application.ExecutablePath));
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", folderBrowserDialog.SelectedPath);
+                Registry.SetValue(tsConst.RegKey, tsConst.RegBrowseDir, folderBrowserDialog.SelectedPath);
                 foreach (string sourcefile in Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles"))
                 {
                     bool loop = true;
                     while (loop)
                     {
                         string filename = "";
-                        if (Path.GetExtension(sourcefile) == ".sig")
+                        if (Path.GetExtension(sourcefile) == tsConst.sigExt)
                         {
                             filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, true);
                             if (filename != "")
@@ -987,6 +1132,10 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Load actual trustlevel DB into Trustlevels-Array
+        /// </summary>
+        /// <returns>true if successful</returns>
         private bool LoadDB()
         {
             string outputText = "";
@@ -1004,26 +1153,30 @@ namespace TheSign
                     string[] thisline = line.Trim().Split(':');
                     try
                     {
-                        keys[thisline[0]] = Convert.ToInt32(thisline[1], 10);
+                        trustLevels[thisline[0]] = Convert.ToInt32(thisline[1], 10);
                     }
                     catch
                     { }
                 }
                 i++;
             }
-            return keys.Count > 0;
+            return trustLevels.Count > 0;
         }
 
+        /// <summary>
+        /// Saves the actual Trustlevels-Array into the trustlevel DB 
+        /// </summary>
+        /// <returns>tru if successful</returns>
         private bool SaveDB()
         {
-            if (keys.Count > 0)
+            if (trustLevels.Count > 0)
             {
                 string outputText = "";
                 string errorText = "";
                 string keytext = "";
-                foreach (string key in keys.Keys)
+                foreach (string key in trustLevels.Keys)
                 {
-                    keytext += key + ":" + keys[key].ToString() + "\n";
+                    keytext += key + ":" + trustLevels[key].ToString() + "\n";
                 }
                 gpg.command = Commands.writeTrust;
                 gpg.armor = true;
@@ -1034,12 +1187,17 @@ namespace TheSign
             return true;
         }
 
+        /// <summary>
+        /// Lookup the actual keys trust level
+        /// </summary>
+        /// <param name="fingerprint">the fingerprint of the requested user</param>
+        /// <returns>the keys trustlevel</returns>
         private int getTrustLevel(string fingerprint)
         {
             int trustlevel = 0;
             try
             {
-                trustlevel = (int)keys[fingerprint] - 2;
+                trustlevel = (int)trustLevels[fingerprint] - 2;
             }
             catch
             {
@@ -1047,13 +1205,16 @@ namespace TheSign
             return trustlevel;
         }
 
+        /// <summary>
+        /// Loads the public keys and creates the nodeview list of the keys
+        /// </summary>
         private void buildTree()
         {
             LoadDB();
-//            KeyRingData publicKey = new KeyForm.KeyRingData(false, gpg);
+            //            KeyRingData publicKey = new KeyForm.KeyRingData(false, gpg);
             KeyRingData publicKey = new KeyRingData(false, gpg);
             keyview.Nodes.Clear();
-            foreach (KeyRingData.KeyRingUser user in publicKey.Items)
+            foreach (KeyRingData.KeyRingUser user in publicKey.keyEntries)
             {
                 TreeNode thisnode = keyview.Nodes.Add(user.User);
                 thisnode.Tag = user;
@@ -1071,41 +1232,11 @@ namespace TheSign
             }
         }
 
-
+        /// <summary>
+        /// Opens a window to select which key should be sended to who and put the 
+        /// pubkey file than into an email with the previous selected receiptients
+        /// </summary>
         private void Sendkey()
-        {
-            if (keyview.SelectedNode != null)
-            {
-                string outputText = "";
-                string errorText = "";
-                gpg.command = Commands.ShowKey;
-                gpg.armor = true;
-                gpg.passphrase = "";
-                KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
-                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
-                if (outputText != "")
-                {
-                    try
-                    {
-                        // connect to Outllok
-                        Outlook._Application outLookApp = new Outlook.Application();
-
-                        Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
-                        actMail.Subject = "TheSign: Public Key of " + keyview.SelectedNode.Text;
-                        actMail.Body = outputText;
-                        actMail.Display(true);
-                    }
-                    catch
-                    {
-                        MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-                    }
-
-                }
-
-            }
-        }
-
-        private void Sendkey2()
         {
             KeyMail keyMailWindow = new KeyMail();
 
@@ -1137,7 +1268,6 @@ namespace TheSign
                     emails += myuser.userEmail + "; ";
                 }
             }
-
             if (keyIDs != "")
             {
                 string outputText = "";
@@ -1146,38 +1276,28 @@ namespace TheSign
                 gpg.command = Commands.ShowKey;
                 gpg.armor = true;
                 gpg.passphrase = "";
-                //TheSign.KeyForm.KeyRingData.KeyRingUser myuser = (TheSign.KeyForm.KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
-                //                gpg.ExecuteCommand("", myuser.UserId, out outputText, out errorText);
                 gpg.ExecuteCommandMultiple("", keyIDs, out outputText, out errorText, true);
                 if (outputText != "")
                 {
-                    try
+                    Outlook.MailItem actMail = MakeNewMail();
+                    if (actMail != null)
                     {
-                        // connect to Outlook
-                        Outlook._Application outLookApp = new Outlook.Application();
-                        string tempfile = Path.GetTempPath() + "\\theSign.pubkey";
-                        StreamWriter fs = new StreamWriter(tempfile);
-                        fs.WriteLine(outputText);
-                        fs.Close();
-                        Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
                         actMail.Subject = "TheSign: Some Public Keys of other users";
                         actMail.Body = "The attached .pubkey file contains the public key(s) of the following users:\n\n";
                         actMail.Body = actMail.Body + users;
                         actMail.Body = actMail.Body + "\n\nTo add or update these users in your public key ring, just drag and drop the pubkey attachment into your TheSign Window\n\n";
                         //                        actMail.Body = actMail.Body + outputText;
                         actMail.To = emails;
+                        string tempfile = Path.GetTempPath() + "\\theSign.pubkey";
+                        StreamWriter fs = new StreamWriter(tempfile);
+                        fs.WriteLine(outputText);
+                        fs.Close();
                         actMail.Attachments.Add(tempfile, Type.Missing, Type.Missing, Type.Missing);
                         actMail.Display(true);
                         Activate();
                         File.Delete(tempfile);
                     }
-                    catch
-                    {
-                        MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
-                    }
-
                 }
-
             }
             else
             {
@@ -1185,6 +1305,9 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Signs a key in the keyring
+        /// </summary>
         private void SignKey()
         {
             if (keyview.SelectedNode != null)
@@ -1218,6 +1341,9 @@ namespace TheSign
 
         }
 
+        /// <summary>
+        /// Deletes a key in the keyring
+        /// </summary>
         private void DeleteKey()
         {
             if (keyview.SelectedNode != null)
@@ -1242,6 +1368,11 @@ namespace TheSign
 
         }
 
+        /// <summary>
+        /// switches the toolbar on and off, depenting if a key is slected or not
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void keyview_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (keyview.SelectedNode == null || keyview.SelectedNode.Parent != null)
@@ -1254,6 +1385,11 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// modifies the trust level of the selected key
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButton_SetTrustlevel_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripItem)
@@ -1261,27 +1397,47 @@ namespace TheSign
                 ToolStripItem mybutton = (ToolStripItem)sender;
                 int newtrustlevel = Convert.ToInt32(mybutton.Tag);
                 KeyRingData.KeyRingUser myuser = (KeyRingData.KeyRingUser)keyview.SelectedNode.Tag;
-                keys[myuser.Fingerprint] = newtrustlevel + 1;
+                trustLevels[myuser.Fingerprint] = newtrustlevel + 1;
                 SaveDB();
                 buildTree();
             }
         }
 
+        /// <summary>
+        /// send some keys via email
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripButtonSend_Click(object sender, EventArgs e)
         {
-            Sendkey2();
+            Sendkey();
         }
 
+        /// <summary>
+        /// Signs a key
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripSign_Click(object sender, EventArgs e)
         {
             SignKey();
         }
 
+        /// <summary>
+        /// deletes a key
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolStripDelete_Click(object sender, EventArgs e)
         {
             DeleteKey();
         }
 
+        /// <summary>
+        /// starts a scan run for valid signatures in the BrowseDirectory
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StartButton_Click(object sender, EventArgs e)
         {
             SignGridView.Rows.Clear();
@@ -1292,11 +1448,11 @@ namespace TheSign
             foreach (string fileName in directorylist)
             {
                 processBar.Value++;
-                if (Path.GetExtension(fileName).ToLower() != ".sig")
+                if (Path.GetExtension(fileName).ToLower() != tsConst.sigExt)
                 {
                     SignGridView.Rows.Add();
                     SignGridView.Rows[SignGridView.RowCount - 1].Cells[0].Value = Path.GetFileName(fileName);
-                    if (System.IO.File.Exists(fileName + ".sig"))
+                    if (System.IO.File.Exists(fileName + tsConst.sigExt))
                     {
                         signdata[] signs = new signdata[0];
                         string outputText = "";
@@ -1305,13 +1461,7 @@ namespace TheSign
                         gpg.armor = true;
                         gpg.batch = false; //Somehow the --batch flag makes GPG to not return all signs, just some...
                         gpg.passphrase = "";
-                        try
-                        {
-                            gpg.ExecuteCommand("", fileName + ".sig", out outputText, out errorText);
-                        }
-                        catch
-                        {
-                        }
+                        gpg.ExecuteCommand("", fileName + tsConst.sigExt, out outputText, out errorText);
                         signs = EvaluateResult(errorText);
                         gpg.batch = true;
                         string signature = "";
@@ -1346,6 +1496,12 @@ namespace TheSign
             GoButton.Enabled = SignGridView.RowCount > 0;
         }
 
+        /// <summary>
+        /// transfers the GPG signature check output into a signData
+        /// structure (like Username, date etc.)
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns>a filled out signData object</returns>
         private signdata[] EvaluateResult(string text)
         {
             ArrayList signs = new ArrayList();
@@ -1417,6 +1573,14 @@ namespace TheSign
             return (signdata[])signs.ToArray(typeof(signdata));
         }
 
+        /// <summary>
+        /// checks, if a set of given signDatas fulfill the nesserary
+        /// signature rules given in the authories file of the browsed directory
+        /// </summary>
+        /// <param name="missings">list of departments which signature is missing</param>
+        /// <param name="signatures">Array of signdata for the actual file</param>
+        /// <param name="actRowCount">reference to the row in the gridview where to store the results</param>
+        /// <returns></returns>
         private bool checkAuthorities(ref string missings, signdata[] signatures, int actRowCount)
         {
             Hashtable foundDepartments = new Hashtable();
@@ -1472,18 +1636,23 @@ namespace TheSign
             return missings == "";
         }
 
-        private void checkfolder(string mypath)
+        /// <summary>
+        /// check if given folder contains a valid authority file
+        /// and enables the start button accourdingly
+        /// </summary>
+        /// <param name="mypath">folder path</param>
+        private void checkForAuthorityFile(string mypath)
         {
             authDepartments.Clear();
             SignGridView.RowCount = 0;
             SignGridView.ColumnCount = 4;
             processBar.Value = 0;
-            if (System.IO.File.Exists(mypath + "\\authorities.xml"))
+            if (System.IO.File.Exists(mypath + "\\" + tsConst.authFile))
             {
                 try
                 {
                     xDoc = new XmlDocument();
-                    xDoc.Load(mypath + "\\authorities.xml");
+                    xDoc.Load(mypath + "\\" + tsConst.authFile);
                     XmlNodeList departments = xDoc.GetElementsByTagName("department");
                     foreach (XmlNode thisnode in departments)
                     {
@@ -1504,7 +1673,7 @@ namespace TheSign
                     }
                     StartButton.Enabled = true;
                     StartButton.Text = "Start";
-                    Registry.SetValue("HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign", "BrowseDir", folderBrowserDialog.SelectedPath);
+                    Registry.SetValue(tsConst.RegKey, tsConst.RegBrowseDir, folderBrowserDialog.SelectedPath);
 
                 }
                 catch
@@ -1520,14 +1689,26 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Opens the folderDialog and reads in the authority file, if the folder
+        /// contains a vaild authority file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FolderDialogButton_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                checkfolder(folderBrowserDialog.SelectedPath);
+                checkForAuthorityFile(folderBrowserDialog.SelectedPath);
             }
         }
 
+        /// <summary>
+        /// Exports the actual signature table of the SignBrowser, actual only as CSV data
+        /// into the clipboard
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GoButton_Click(object sender, EventArgs e)
         {
 
@@ -1564,7 +1745,143 @@ namespace TheSign
             }
         }
 
+        /// <summary>
+        /// Connects to Outlook
+        /// </summary>
+        /// <returns></returns>
+        private Outlook._Application OpenOutlook()
+        {
+            try
+            {
+                // See details in http://support.microsoft.com/kb/302902/
+                return new Outlook.Application();
+            }
+            catch
+            {
+                MessageBox.Show("Error: No connection to Outlook found..", "TheSign Error");
+                return null;
+            }
+
+        }
 
 
+        /// <summary>
+        /// Creates a new emtpy Outlook mail
+        /// </summary>
+        /// <returns></returns>
+        private Outlook.MailItem MakeNewMail()
+        {
+            try
+            {
+                // connect to Outlook
+                Outlook._Application outLookApp = OpenOutlook();
+
+                Outlook.MailItem actMail = (Outlook.MailItem)outLookApp.CreateItem(Outlook.OlItemType.olMailItem);
+                return actMail;
+            }
+            catch
+            {
+                MessageBox.Show("Error: Email could not been created..", "TheSign Error");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// get the actual mail from Outlook
+        /// </summary>
+        /// <returns></returns>
+        private Outlook.MailItem GetActiveMail()
+        {
+            try
+            {
+                Outlook._Application outLookApp = OpenOutlook();
+                // search for the active element
+                Outlook._Explorer myExplorer = outLookApp.ActiveExplorer();
+                // is one item selected?
+                if (myExplorer.Selection.Count == 1)
+                {
+                    //is it a Mail?
+                    if (myExplorer.Selection[1] is Outlook.MailItem)
+                    {
+                        // then reply it
+                        return (Outlook.MailItem)myExplorer.Selection[1];
+                    }
+                    else
+                    {
+                        MessageBox.Show("Sorry, the Item in Outlook seems no mail..", "TheSign Error");
+                        return null;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Sorry, there's more as one item selected in Outlook", "TheSign Error");
+                    return null;
+                }
+
+            }
+            catch
+            {
+                MessageBox.Show("Error: Email could not been found..", "TheSign Error");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a Mail object as a reply to the actual one
+        /// </summary>
+        /// <returns></returns>
+        private Outlook.MailItem MakeReplyMail()
+        {
+            Outlook.MailItem actMail = GetActiveMail();
+            if (actMail != null)
+            {
+                try
+                {
+                    return actMail.Reply();
+                }
+                catch
+                {
+                    MessageBox.Show("Error: Could not create Reply Mail..", "TheSign Error");
+                    return null;
+                }
+
+            }
+            return null;
+        }
+    }
+
+
+
+    /// <summary>
+    /// Generic class to store the important program constants
+    /// </summary>
+    static class tsConst
+    {
+        // The extension of the signature files
+        public const string sigExt = ".sig";
+        // The extension of the public key files
+        public const string pubKeyExt = ".pubkey";
+        // Where in the registry the data is stored
+        public const string RegKey = "HKEY_CURRENT_USER\\SOFTWARE\\Koehler_Programms\\TheSign";
+        // the key for the last browsed directory
+        public const string RegBrowseDir = "BrowseDir";
+        // the key for the install directory of the sign
+        // need by the installer to installing updates
+        public const string RegExePath = "ExePath";
+        //the key of where to store received files
+        public const string RegFileDir = "FileDir";
+        // the name of the authorisation file
+        public const string authFile = "authorities.xml";
+        // the name of the public key file
+        public const string pubKeyFile = "pubring.gpg";
+        // the name of the secret key file
+        public const string secKeyFile = "secring.gpg";
+        // the name of the revoke key file
+        public const string revKeyFile = "revokkey.gpg";
+        // the GPG subdirectory
+        public const string gpgDir = "GnuPG";
+        // the program author (for debug emails
+        public const string progAuthor = "steffen@koehlers.de";
     }
 }
