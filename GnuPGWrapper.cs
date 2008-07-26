@@ -90,6 +90,10 @@ namespace Emmanuel.Cryptography.GnuPG
         /// <summary>
         /// List seckeyring to stdout
         /// </summary>
+        RevokeKey,
+        /// <summary>
+        ///  generate revoke key
+        /// </summary>
         Seckey,
         /// <summary>
         /// Decrypt data
@@ -377,72 +381,7 @@ namespace Emmanuel.Cryptography.GnuPG
             {
                 optionsBuilder.Append("--batch ");
             }
-
-            // Command
-            switch (_command)
-            {
-                case Commands.clearSign:
-                    optionsBuilder.Append("--clearsign -o - ");
-                    passphraseNeeded = true;
-                    break;
-                case Commands.Sign:
-                    optionsBuilder.Append("--clear ");
-                    passphraseNeeded = true;
-                    break;
-                case Commands.Encrypt:
-                    optionsBuilder.Append("--encrypt ");
-                    recipientNeeded = true;
-                    break;
-                case Commands.SignAndEncrypt:
-                    optionsBuilder.Append("--sign ");
-                    optionsBuilder.Append("--encrypt ");
-                    recipientNeeded = true;
-                    passphraseNeeded = true;
-                    break;
-                case Commands.Decrypt:
-                    optionsBuilder.Append("--decrypt ");
-                    break;
-                case Commands.Import:
-                    optionsBuilder.Append("--import ");
-                    break;
-                case Commands.List:
-                    optionsBuilder.Append("--list-sigs --fingerprint --with-colons ");
-                    break;
-                case Commands.loadTrust:
-                    optionsBuilder.Append("--export-ownertrust ");
-                    break;
-                case Commands.writeTrust:
-                    optionsBuilder.Append("--import-ownertrust ");
-                    break;
-                case Commands.Seckey:
-                    optionsBuilder.Append("--list-secret-keys --with-colons ");
-                    break;
-                case Commands.Verify:
-                    optionsBuilder.Append("--verify ");
-                    break;
-                case Commands.SignKey:
-                    optionsBuilder.Append("--sign-key ");
-                    passphraseNeeded = true;
-                    break;
-                case Commands.ShowKey:
-                    optionsBuilder.Append("--export ");
-                    break;
-                case Commands.AddKey:
-                    optionsBuilder.Append("--import ");
-                    break;
-                case Commands.DelKey:
-                    optionsBuilder.Append("--delete-key ");
-                    break;
-                case Commands.Fingerprint:
-                    optionsBuilder.Append("--fingerprint " + _originator + " ");
-                    break;
-                case Commands.detachsign:
-                    //					optionsBuilder.Append("--detach-sign -o \""+fileName+ ".sig\" ");
-                    optionsBuilder.Append("--detach-sign -o - ");
-                    passphraseNeeded = true;
-                    break;
-            }
-
+// here was the commad switch statement before
             // ASCII output?
             if (_armor)
             {
@@ -510,6 +449,76 @@ namespace Emmanuel.Cryptography.GnuPG
                     optionsBuilder.Append("--verbose --verbose ");
                     break;
             }
+            // Command
+            switch (_command)
+            {
+                case Commands.clearSign:
+                    optionsBuilder.Append("--clearsign -o - ");
+                    passphraseNeeded = true;
+                    break;
+                case Commands.Sign:
+                    optionsBuilder.Append("--clear ");
+                    passphraseNeeded = true;
+                    break;
+                case Commands.Encrypt:
+                    optionsBuilder.Append("--encrypt ");
+                    recipientNeeded = true;
+                    break;
+                case Commands.SignAndEncrypt:
+                    optionsBuilder.Append("--sign ");
+                    optionsBuilder.Append("--encrypt ");
+                    recipientNeeded = true;
+                    passphraseNeeded = true;
+                    break;
+                case Commands.Decrypt:
+                    optionsBuilder.Append("--decrypt ");
+                    break;
+                case Commands.Import:
+                    optionsBuilder.Append("--import ");
+                    break;
+                case Commands.List:
+                    optionsBuilder.Append("--list-sigs --fingerprint --with-colons ");
+                    break;
+                case Commands.loadTrust:
+                    optionsBuilder.Append("--export-ownertrust ");
+                    break;
+                case Commands.writeTrust:
+                    optionsBuilder.Append("--import-ownertrust ");
+                    break;
+                case Commands.Seckey:
+                    optionsBuilder.Append("--list-secret-keys --with-colons ");
+                    break;
+                case Commands.Verify:
+                    optionsBuilder.Append("--verify ");
+                    break;
+                case Commands.SignKey:
+                    optionsBuilder.Append("--sign-key ");
+                    passphraseNeeded = true;
+                    break;
+                case Commands.RevokeKey:
+                    optionsBuilder.Append( " -o \""+fileName+"\" --gen-revoke " + _originator );
+                    interActive = true;
+                    passphraseNeeded = false;
+                    break;
+                case Commands.ShowKey:
+                    optionsBuilder.Append("--export ");
+                    break;
+                case Commands.AddKey:
+                    optionsBuilder.Append("--import ");
+                    break;
+                case Commands.DelKey:
+                    optionsBuilder.Append("--delete-key ");
+                    break;
+                case Commands.Fingerprint:
+                    optionsBuilder.Append("--fingerprint " + _originator + " ");
+                    break;
+                case Commands.detachsign:
+                    //					optionsBuilder.Append("--detach-sign -o \""+fileName+ ".sig\" ");
+                    optionsBuilder.Append("--detach-sign -o - ");
+                    passphraseNeeded = true;
+                    break;
+            }
+
 
             return (optionsBuilder.ToString());
         }
@@ -533,7 +542,7 @@ namespace Emmanuel.Cryptography.GnuPG
             string gpgOptions = BuildOptions(inputText);
             if (!multipleArgs)
             {
-                if (inputText != "")
+                if (inputText != "" && _command!= Commands.RevokeKey)
                 {
                     gpgOptions += " \"" + inputText + "\"";
                 }
@@ -547,101 +556,133 @@ namespace Emmanuel.Cryptography.GnuPG
             }
             string gpgExecutable = _bindirectory + "\\gpg.exe";
 
-            // TODO check existence of _bindirectory and gpgExecutable
-
-            // Create startinfo object
-            ProcessStartInfo pInfo = new ProcessStartInfo(gpgExecutable, gpgOptions);
-            pInfo.WorkingDirectory = _bindirectory;
-            pInfo.CreateNoWindow = true;
-            pInfo.UseShellExecute = false;
-            // Redirect everything: 
-            // stdin to send the passphrase, stdout to get encrypted message, stderr in case of errors...
-            pInfo.RedirectStandardInput = true;
-            pInfo.RedirectStandardOutput = true;
-            pInfo.RedirectStandardError = true;
-            pInfo.StandardErrorEncoding = Encoding.GetEncoding(437);
-            pInfo.StandardOutputEncoding = Encoding.UTF8;
-            _outputString = "";
-            _errorString = "";
-            errorText = "";
-            try
+            if (interActive)
             {
-                _processObject = Process.Start(pInfo);
-            }
-            catch
-            {
-                MessageBox.Show("No GPG found - Installation incomplete?", "TheSign Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                return;
-            }
-            // Create two threads to read both output/error streams without creating a deadlock
-            ThreadStart outputEntry = new ThreadStart(StandardOutputReader);
-            Thread outputThread = new Thread(outputEntry);
-            outputThread.Start();
-            ThreadStart errorEntry = new ThreadStart(StandardErrorReader);
-            Thread errorThread = new Thread(errorEntry);
-            errorThread.Start();
+                ProcessStartInfo pInfo = new ProcessStartInfo(gpgExecutable, gpgOptions);
+                pInfo.WorkingDirectory = _bindirectory;
+                pInfo.CreateNoWindow = false;
+                pInfo.UseShellExecute = true;
+                // Redirect everything: 
+                // stdin to send the passphrase, stdout to get encrypted message, stderr in case of errors...
+                // pInfo.RedirectStandardInput = true;
+                // pInfo.RedirectStandardOutput = true;
+                // pInfo.RedirectStandardError = true;
+                // pInfo.StandardErrorEncoding = Encoding.GetEncoding(437);
+                // pInfo.StandardOutputEncoding = Encoding.UTF8;
+                _processObject=Process.Start(pInfo);
+                interActive = false;
+                _processObject.WaitForExit();
 
-            // Send pass phrase, if any
-            if (_passphrase != null && _passphrase != "")
-            {
-                _processObject.StandardInput.WriteLine(_passphrase);
-                _processObject.StandardInput.Flush();
-            }
-
-            // Send input text
-            if (stdin != "")
-            {
-                _processObject.StandardInput.Write(stdin);
-                _processObject.StandardInput.Flush();
-            }
-            _processObject.StandardInput.Close();
-
-
-
-            if (_processObject.WaitForExit(ProcessTimeOutMilliseconds))
-            {
-                // Process exited before timeout...
-                // Wait for the threads to complete reading output/error (but use a timeout!)
-                if (!outputThread.Join(ProcessTimeOutMilliseconds / 2))
+                // Check results and prepare output
+                _exitcode = _processObject.ExitCode;
+                errorText = "";
+                if (_exitcode == 0)
                 {
-                    outputThread.Abort();
+                    outputText = "Done";
                 }
-                if (!errorThread.Join(ProcessTimeOutMilliseconds / 2))
+                else
                 {
-                    errorThread.Abort();
+                    outputText = "GPG reported an error";
                 }
             }
             else
             {
-                // Process timeout: PGP hung somewhere... kill it (as well as the threads!)
+                // TODO check existence of _bindirectory and gpgExecutable
+
+                // Create startinfo object
+                ProcessStartInfo pInfo = new ProcessStartInfo(gpgExecutable, gpgOptions);
+                pInfo.WorkingDirectory = _bindirectory;
+                pInfo.CreateNoWindow = true;
+                pInfo.UseShellExecute = false;
+                // Redirect everything: 
+                // stdin to send the passphrase, stdout to get encrypted message, stderr in case of errors...
+                pInfo.RedirectStandardInput = true;
+                pInfo.RedirectStandardOutput = true;
+                pInfo.RedirectStandardError = true;
+                pInfo.StandardErrorEncoding = Encoding.GetEncoding(437);
+                pInfo.StandardOutputEncoding = Encoding.UTF8;
                 _outputString = "";
-                _errorString = "Timed out after " + ProcessTimeOutMilliseconds.ToString() + " milliseconds";
-                _processObject.Kill();
-                if (outputThread.IsAlive)
+                _errorString = "";
+                errorText = "";
+                try
                 {
-                    outputThread.Abort();
+                    _processObject = Process.Start(pInfo);
                 }
-                if (errorThread.IsAlive)
+                catch
                 {
-                    errorThread.Abort();
+                    MessageBox.Show("No GPG found - Installation incomplete?", "TheSign Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    return;
                 }
-            }
+                // Create two threads to read both output/error streams without creating a deadlock
+                ThreadStart outputEntry = new ThreadStart(StandardOutputReader);
+                Thread outputThread = new Thread(outputEntry);
+                outputThread.Start();
+                ThreadStart errorEntry = new ThreadStart(StandardErrorReader);
+                Thread errorThread = new Thread(errorEntry);
+                errorThread.Start();
 
-            // Check results and prepare output
-            _exitcode = _processObject.ExitCode;
-            if (_exitcode == 0)
-            {
-                outputText = _outputString;
-            }
-            else
-            {
-                if (_errorString == "")
+                // Send pass phrase, if any
+                if (_passphrase != null && _passphrase != "")
                 {
-                    _errorString = "GPGNET: [" + _processObject.ExitCode.ToString() + "]: Unknown error";
+                    _processObject.StandardInput.WriteLine(_passphrase);
+                    _processObject.StandardInput.Flush();
                 }
-                //throw new GnuPGException(_errorString);
+
+                // Send input text
+                if (stdin != "")
+                {
+                    _processObject.StandardInput.Write(stdin);
+                    _processObject.StandardInput.Flush();
+                }
+                _processObject.StandardInput.Close();
+
+
+
+                if (_processObject.WaitForExit(ProcessTimeOutMilliseconds))
+                {
+                    // Process exited before timeout...
+                    // Wait for the threads to complete reading output/error (but use a timeout!)
+                    if (!outputThread.Join(ProcessTimeOutMilliseconds / 2))
+                    {
+                        outputThread.Abort();
+                    }
+                    if (!errorThread.Join(ProcessTimeOutMilliseconds / 2))
+                    {
+                        errorThread.Abort();
+                    }
+                }
+                else
+                {
+                    // Process timeout: PGP hung somewhere... kill it (as well as the threads!)
+                    _outputString = "";
+                    _errorString = "Timed out after " + ProcessTimeOutMilliseconds.ToString() + " milliseconds";
+                    _processObject.Kill();
+                    if (outputThread.IsAlive)
+                    {
+                        outputThread.Abort();
+                    }
+                    if (errorThread.IsAlive)
+                    {
+                        errorThread.Abort();
+                    }
+                }
+
+                // Check results and prepare output
+                _exitcode = _processObject.ExitCode;
+                if (_exitcode == 0)
+                {
+                    outputText = _outputString;
+                }
+                else
+                {
+                    if (_errorString == "")
+                    {
+                        _errorString = "GPGNET: [" + _processObject.ExitCode.ToString() + "]: Unknown error";
+                    }
+                    //throw new GnuPGException(_errorString);
+                }
+                errorText = _errorString;
             }
-            errorText = _errorString;
         }
 
         /// <summary>
@@ -681,6 +722,7 @@ namespace Emmanuel.Cryptography.GnuPG
         private string _bindirectory = "";
         private string _passphrase = "";
         private string _passphrasefd = "";
+        private bool interActive = false;
         private VerboseLevel _verbose = VerboseLevel.NoVerbose;
         private bool _batch = true;
         private string _originator = "";

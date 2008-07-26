@@ -247,4 +247,19 @@
         W/wd/oYX9XIhYZeLkztX6l3MA/OSFAUQ0mX+P6NDup+3iFAEAAAAAElFTkSuQmCC
 </value>
   </data>
+  <data name="textBoxDescription.Text" xml:space="preserve">
+    <value>TheSign
+
+a little frontend for GPG  expecially for doing signatures on files
+
+Credits:
+
+The GPG wrapper is based onthe GnuPGWrapper  by Emmanuel KARTMANN
+
+Many thanks to the patience of the beta- testers
+Günter Römer
+Sven Hermann
+
+and all the others who made this program possible</value>
+  </data>
 </root>

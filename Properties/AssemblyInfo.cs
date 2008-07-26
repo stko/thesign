@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("TheSign GPG Signatures")]
 [assembly: AssemblyDescription("GPG Fontend expecially for signing")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Published unter the GPL Licence")]
 [assembly: AssemblyProduct("The Sign")]
-[assembly: AssemblyCopyright("Copyright ©  2007 Steffen Köhler (GPL)")]
+[assembly: AssemblyCopyright("Copyright ©  2007 - 2008 Steffen Köhler")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

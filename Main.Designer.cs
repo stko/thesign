@@ -36,6 +36,7 @@
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.keyDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.filesSignaturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteOwnKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,6 +57,7 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.toolStripContainer2 = new System.Windows.Forms.ToolStripContainer();
             this.keyview = new System.Windows.Forms.TreeView();
+            this.TreeViewImageList = new System.Windows.Forms.ImageList(this.components);
             this.toolStripKeySend = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.KeyStrip = new System.Windows.Forms.ToolStrip();
@@ -84,7 +86,6 @@
             this.StartButton = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.processBar = new System.Windows.Forms.ToolStripProgressBar();
-            this.TreeViewImageList = new System.Windows.Forms.ImageList(this.components);
             this.menuStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -138,24 +139,32 @@
             // 
             this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.keyDataToolStripMenuItem,
-            this.filesSignaturesToolStripMenuItem});
+            this.filesSignaturesToolStripMenuItem,
+            this.deleteOwnKeyToolStripMenuItem});
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
-            this.toolStripMenuItem1.Text = "&Backup...";
+            this.toolStripMenuItem1.Text = "&Maintenance";
             // 
             // keyDataToolStripMenuItem
             // 
             this.keyDataToolStripMenuItem.Name = "keyDataToolStripMenuItem";
-            this.keyDataToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.keyDataToolStripMenuItem.Text = "&Key Data...";
+            this.keyDataToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.keyDataToolStripMenuItem.Text = "Backup &Key Data...";
             this.keyDataToolStripMenuItem.Click += new System.EventHandler(this.keyDataToolStripMenuItem_Click);
             // 
             // filesSignaturesToolStripMenuItem
             // 
             this.filesSignaturesToolStripMenuItem.Name = "filesSignaturesToolStripMenuItem";
-            this.filesSignaturesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.filesSignaturesToolStripMenuItem.Text = "&Files && Signatures...";
+            this.filesSignaturesToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.filesSignaturesToolStripMenuItem.Text = "Backup &Files && Signatures...";
             this.filesSignaturesToolStripMenuItem.Click += new System.EventHandler(this.filesSignaturesToolStripMenuItem_Click);
+            // 
+            // deleteOwnKeyToolStripMenuItem
+            // 
+            this.deleteOwnKeyToolStripMenuItem.Name = "deleteOwnKeyToolStripMenuItem";
+            this.deleteOwnKeyToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.deleteOwnKeyToolStripMenuItem.Text = "&Revoke your own Key...";
+            this.deleteOwnKeyToolStripMenuItem.Click += new System.EventHandler(this.deleteOwnKeyToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -374,6 +383,17 @@
             this.keyview.DragDrop += new System.Windows.Forms.DragEventHandler(this.Output_DragDrop);
             this.keyview.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.keyview_AfterSelect);
             this.keyview.DragEnter += new System.Windows.Forms.DragEventHandler(this.Output_DragEnter);
+            // 
+            // TreeViewImageList
+            // 
+            this.TreeViewImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("TreeViewImageList.ImageStream")));
+            this.TreeViewImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.TreeViewImageList.Images.SetKeyName(0, "trust_dont_know.png");
+            this.TreeViewImageList.Images.SetKeyName(1, "trust_no_trust.png");
+            this.TreeViewImageList.Images.SetKeyName(2, "trust_marginally.png");
+            this.TreeViewImageList.Images.SetKeyName(3, "trust_fully.png");
+            this.TreeViewImageList.Images.SetKeyName(4, "trust_ultimatelly.png");
+            this.TreeViewImageList.Images.SetKeyName(5, "sign.png");
             // 
             // toolStripKeySend
             // 
@@ -674,17 +694,6 @@
             this.processBar.Name = "processBar";
             this.processBar.Size = new System.Drawing.Size(200, 16);
             // 
-            // TreeViewImageList
-            // 
-            this.TreeViewImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("TreeViewImageList.ImageStream")));
-            this.TreeViewImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.TreeViewImageList.Images.SetKeyName(0, "trust_dont_know.png");
-            this.TreeViewImageList.Images.SetKeyName(1, "trust_no_trust.png");
-            this.TreeViewImageList.Images.SetKeyName(2, "trust_marginally.png");
-            this.TreeViewImageList.Images.SetKeyName(3, "trust_fully.png");
-            this.TreeViewImageList.Images.SetKeyName(4, "trust_ultimatelly.png");
-            this.TreeViewImageList.Images.SetKeyName(5, "sign.png");
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -695,7 +704,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
-            this.Text = "TheSign - © Steffen Köhler ";
+            this.Text = "TheSign";
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Output_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Output_DragEnter);
             this.menuStrip1.ResumeLayout(false);
@@ -789,6 +798,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn SignedBy;
         private System.Windows.Forms.DataGridViewTextBoxColumn Signmissing;
         private System.Windows.Forms.ImageList TreeViewImageList;
+        private System.Windows.Forms.ToolStripMenuItem deleteOwnKeyToolStripMenuItem;
     }
 }
 

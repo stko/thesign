@@ -23,6 +23,8 @@ namespace TheSign
 
         //the object to wrap the GPG access
         GnuPGWrapper gpg = new GnuPGWrapper();
+        KeyRingData.KeyRingUser ownerKeyId = null;
+
         // the window to input the PassPhrase
         PassphraseForm testDialog = new PassphraseForm();
         // the About Window
@@ -181,13 +183,12 @@ namespace TheSign
             KeyRingData privateKey = new KeyRingData(true, gpg);
             int i = 0;
             bool endflag = false;
-            KeyRingData.KeyRingUser thisitem = null;
             // running through the list of known secret keys
             while (i < privateKey.keyEntries.Count && !endflag)
             {
-                thisitem = (KeyRingData.KeyRingUser)privateKey.keyEntries[i];
+                ownerKeyId = (KeyRingData.KeyRingUser)privateKey.keyEntries[i];
                 // looking for the first valid entry
-                if (thisitem.valid)
+                if (ownerKeyId.valid)
                 {
                     endflag = true;
                 }
@@ -200,9 +201,18 @@ namespace TheSign
             {
                 // valid secret key found
                 // set originator in the GPGP object
-                gpg.originator = thisitem.UserId;
+                gpg.originator = ownerKeyId.UserId;
                 // and set the window title
-                Text = thisitem.User + " | " + Text + " | " + build.version + "  " + build.buildver;
+                Text += " | " + ownerKeyId.User;
+                FileInfo tempFile = new FileInfo(Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.revKeyFile);
+                if (!tempFile.Exists)
+                {
+                    if (MessageBox.Show("You do not have a revokation file to revoke your signature file if necessary\nDo you want to create it now?", "Generate Key revokation?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        Revokekey();
+                    }
+
+                }
             }
             else
             {
@@ -252,7 +262,7 @@ namespace TheSign
                         HandleFile(fileName, false);
                     }
                 }
-                    // or is it a dropped email- attachment?
+                // or is it a dropped email- attachment?
                 else if (e.Data.GetDataPresent("FileGroupDescriptor"))
                 {
                     clearWindow();
@@ -495,7 +505,7 @@ namespace TheSign
                         }
                         lastcheckedFile = targetFileName;
                         // append the signature to an exisiting signature files
-                        targetFileName = MoveIntoFile(targetFileName, tsConst.sigExt, fileName, true, true, true);
+                        targetFileName = MoveIntoFile(targetFileName, tsConst.sigExt, fileName, true, true, true,true);
                         Output.Text += "\r\nSignature saved";
                         // remove duplicates in the signature file
                         cleanupSigfile(targetFileName);
@@ -515,7 +525,7 @@ namespace TheSign
                     toolStripButtonSendSignaturesOnly.Enabled = true;
                 }
             }
-            else if (Path.GetExtension(fileName).ToLower() == tsConst.pubKeyExt )
+            else if (Path.GetExtension(fileName).ToLower() == tsConst.pubKeyExt)
             {
                 // import the key file
                 importKey(fileName);
@@ -529,7 +539,7 @@ namespace TheSign
                 if (isMail)
                 {
                     // save the file first
-                    fileName = MoveIntoFile(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles\\" + Path.GetFileName(fileName), "", fileName, true, false, false);
+                    fileName = MoveIntoFile(Path.GetDirectoryName(Application.ExecutablePath) + "\\SignedFiles\\" + Path.GetFileName(fileName), "", fileName, true, false, false,true);
                     if (fileName != "")
                     {
                         // Sign it
@@ -629,7 +639,7 @@ namespace TheSign
         /// otherways the output file will be overwritten</param>
         /// <param name="overwrite">if true, overwrite output without confirmation window</param>
         /// <returns></returns>
-        private string MoveIntoFile(string fileName, string ext, string input, bool isFile, bool Append, bool overwrite)
+        private string MoveIntoFile(string fileName, string ext, string input, bool isFile, bool Append, bool overwrite, bool setReadOnly)
         {
             fileName += ext;
             if (isFile)
@@ -689,7 +699,7 @@ namespace TheSign
                 inputStream.Close();
                 fs.Close();
                 // and set the file to readonly again
-                File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
+                if (setReadOnly) File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
 
             }
             else
@@ -703,7 +713,7 @@ namespace TheSign
                 StreamWriter fs = new StreamWriter(fileName, Append);
                 fs.Write(input);
                 fs.Close();
-                File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
+                if (setReadOnly) File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
             }
             return fileName;
         }
@@ -803,11 +813,17 @@ namespace TheSign
                 if (errorText == "")
                 {
                     //Attach output signature text to signature file
-                    MoveIntoFile(fileName, tsConst.sigExt, outputText, false, true, false);
+                    MoveIntoFile(fileName, tsConst.sigExt, outputText, false, true, false,true);
                     File.SetAttributes(fileName, File.GetAttributes(fileName) | FileAttributes.ReadOnly);
                     Output.Text = Output.Text + "\r\nSuccess: " + Path.GetFileName(fileName) + " signed\r\n";
                     CheckSig(fileName + tsConst.sigExt, false);
                 }
+                else
+                {
+                    MessageBox.Show(errorText, "GPG replies:");
+
+                }
+
 
             }
             else
@@ -815,6 +831,23 @@ namespace TheSign
                 Output.Text = Output.Text + "\r\nCanceled";
 
             }
+        }
+
+        /// <summary>
+        /// generated a key revoke file
+        /// </summary>
+        private void Revokekey()
+        {
+            clearWindow();
+            string outputText = "";
+            string errorText = "";
+            gpg.command = Commands.RevokeKey;
+            gpg.armor = true;
+            gpg.batch = false;
+            Output.Text = Output.Text + "\r\nGenerate key revoke file ...";
+            gpg.ExecuteCommand("", Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.revKeyFile, out outputText, out errorText);
+            gpg.batch = true;
+            Output.Text = Output.Text + "\r\n" + outputText;
         }
 
         /// <summary>
@@ -1057,10 +1090,14 @@ namespace TheSign
         {
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                string filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\"+tsConst.pubKeyFile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\"+tsConst.gpgDir+"\\"+tsConst.pubKeyFile, true, false, true);
+                string filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + tsConst.pubKeyFile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.pubKeyFile, true, false, true, true);
                 if (filename != "")
                 {
-                    filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\"+tsConst.secKeyFile , "", Path.GetDirectoryName(Application.ExecutablePath) + "\\"+tsConst.gpgDir+"\\"+tsConst.secKeyFile , true, false, true);
+                    filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + tsConst.secKeyFile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.secKeyFile, true, false, true,true);
+                }
+                if (filename != "")
+                {
+                    filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + tsConst.revKeyFile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.revKeyFile, true, false, true, true);
                 }
                 if (filename != "")
                 {
@@ -1095,7 +1132,7 @@ namespace TheSign
                         string filename = "";
                         if (Path.GetExtension(sourcefile) == tsConst.sigExt)
                         {
-                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, true);
+                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, true,true);
                             if (filename != "")
                             {
                                 cleanupSigfile(filename);
@@ -1103,7 +1140,7 @@ namespace TheSign
                         }
                         else
                         {
-                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, false);
+                            filename = MoveIntoFile(folderBrowserDialog.SelectedPath + "\\" + Path.GetFileName(sourcefile), "", sourcefile, true, false, false,true);
                         }
                         if (filename != "")
                         {
@@ -1849,6 +1886,45 @@ namespace TheSign
             }
             return null;
         }
+
+        /// <summary>
+        /// Distributes the revokation key to all other known users
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void deleteOwnKeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("This funktion makes your key unusable\nDo you REALLY want this?", "Own Key Deletion", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) == DialogResult.OK)
+            {
+                if (MessageBox.Show("Again: Do you REALLY want to DELETE your own key?", "Emergency Warning!!", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button2) == DialogResult.OK)
+                {
+                    KeyRingData publicKey = new KeyRingData(false, gpg);
+                    string emails = "";
+                    foreach (KeyRingData.KeyRingUser user in publicKey.keyEntries)
+                    {
+                        emails += user.userEmail + "; ";
+                    }
+                    Outlook.MailItem actMail = MakeNewMail();
+                    if (actMail != null)
+                    {
+                        actMail.Subject = "TheSign: Revoke key of " + ownerKeyId.User;
+                        actMail.Body = "The attached .pubkey file contains the revoke key from " + ownerKeyId.User + ", who wants to declare his actual key as invalid\n\n";
+                        actMail.Body = actMail.Body + "\n\nTo add this revokation information to your public key ring, just drag and drop the pubkey attachment into your TheSign Window\n\n";
+                        //                        actMail.Body = actMail.Body + outputText;
+                        actMail.To = emails;
+                        string tempfile = Path.GetTempPath() + "\\revoke.pubkey";
+                        MoveIntoFile(tempfile, "", Path.GetDirectoryName(Application.ExecutablePath) + "\\" + tsConst.gpgDir + "\\" + tsConst.revKeyFile, true, false, true,false);
+                        actMail.Attachments.Add(tempfile, Type.Missing, Type.Missing, Type.Missing);
+                        actMail.Display(true);
+                        Activate();
+                        File.Delete(tempfile);
+                    }
+
+
+                }
+            }
+        }
+
     }
 
 
