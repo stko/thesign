@@ -926,7 +926,9 @@ namespace TheSign
             fs.WriteLine("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>TheSign Signature Certification</title></head><body><center>"
                 + "<h2>OpenPGP (GPG) Signature Certification</h2>"
                 + "<p>I herewith agree that my digital signature given and identified using OpenPGP (via TheSign/GPG) shall be valid and binding to the same extent as my handwrittten signature under any document.<p>"
+                + "<p>This agreement is valid until I declare my digital signature as not longer valid by distribute my revoke key.<p>"
                 + "<p>Hiermit erkl&auml;re ich, dass meine digitale Unterschrift, die unter Verwendung von OpenPGP (mittels TheSign/GPG) abgegeben und identifiziert wird, in gleicher Weise g&uuml;ltig und bindend sein soll wie meine handschriftliche Unterschrift unter einem Dokument.<p>"
+                + "<p>Diese Einverst&auml;ndnis gilt bis zu dem Zeitpunkt, an dem ich meine digitale Unterschrift durch Verteilen meines Revoke Keys f&uuml;r nicht weiter g&uuml;tig erkl&auml;re.<p>"
                 + "<tt>"
                 + outputText.Replace("\n", "<br>")
                 + "</tt><p><p>Date:_______________________________________________"
@@ -1630,7 +1632,7 @@ namespace TheSign
                 {
                     try
                     {
-                        if (thisnode.InnerText == thisemail.email)
+                        if (thisnode.InnerText.ToLower() == thisemail.email.ToLower())
                         {
                             XmlNode parentnode = thisnode.ParentNode.ParentNode; //move up to the department node
                             string department = parentnode.Attributes.GetNamedItem("name").Value; //getting the Name of the department
